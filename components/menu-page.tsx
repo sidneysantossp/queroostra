@@ -32,6 +32,7 @@ import {
 import type { CartProduct } from "@/components/catalog-data";
 import type { ProductRecord } from "@/lib/domain";
 import { OysterLogo } from "@/components/oyster-logo";
+import { MobileNav } from "@/components/mobile-nav";
 import { SectionTitle } from "@/components/section-title";
 
 const money = new Intl.NumberFormat("pt-BR", {
@@ -334,7 +335,7 @@ export function MenuPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-ink text-pearl">
+    <main className="min-h-screen overflow-hidden bg-ink text-pearl pb-20 lg:pb-0">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between gap-3 px-5 md:px-8">
           <Link href="/" aria-label="Voltar para a página inicial" className="shrink-0">
@@ -397,7 +398,7 @@ export function MenuPage() {
             Experiências e acompanhamentos
           </p>
           <h1 className="mt-5 max-w-4xl font-display text-[3.25rem] font-semibold leading-[0.9] text-pearl sm:text-6xl md:text-8xl">
-            Cardápio Quero Ostra
+            Cardápio
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-8 text-white/60 md:text-lg">
             Escolha suas ostras e encontre bebidas para acompanhar cada momento, dos
@@ -650,7 +651,7 @@ export function MenuPage() {
             exit={{ opacity: 0, scale: 0.75, x: 20 }}
             type="button"
             onClick={() => setCartOpen(true)}
-            className="fixed bottom-6 right-5 z-[55] grid size-16 place-items-center rounded-full bg-gold-gradient text-ink shadow-[0_18px_55px_rgba(212,175,55,.28)] transition hover:scale-105 md:bottom-8 md:right-8"
+            className="fixed bottom-6 right-5 z-[55] hidden lg:grid size-16 place-items-center rounded-full bg-gold-gradient text-ink shadow-[0_18px_55px_rgba(212,175,55,.28)] transition hover:scale-105 md:bottom-8 md:right-8"
             aria-label={`Abrir carrinho com ${selection.count} itens`}
           >
             <ShoppingCart size={25} strokeWidth={1.8} />
@@ -798,6 +799,8 @@ export function MenuPage() {
           </>
         )}
       </AnimatePresence>
+
+      <MobileNav activeTab="cardapio" cartCount={selection.count} onCartClick={() => setCartOpen(true)} />
     </main>
   );
 }

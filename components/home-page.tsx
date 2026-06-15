@@ -48,6 +48,7 @@ import {
 import type { CartProduct } from "@/components/catalog-data";
 import type { ProductRecord } from "@/lib/domain";
 import { useCheckoutStore } from "@/stores/checkout-store";
+import { MobileNav } from "@/components/mobile-nav";
 
 const steps = [
   {
@@ -344,7 +345,7 @@ export function HomePage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-ink text-pearl">
+    <main className="min-h-screen overflow-hidden bg-ink text-pearl pb-20 lg:pb-0">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between px-5 md:px-8 lg:h-[72px]">
           <button onClick={() => scrollTo("inicio")} aria-label="Voltar ao início">
@@ -996,7 +997,7 @@ export function HomePage() {
 
       <a
         href={whatsappUrl}
-        className="fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105"
+        className="fixed bottom-20 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
         aria-label="Conversar no WhatsApp"
       >
         <MessageCircle size={23} />
@@ -1010,7 +1011,7 @@ export function HomePage() {
             exit={{ opacity: 0, scale: 0.85, y: 30 }}
             type="button"
             onClick={() => setCartOpen(true)}
-            className="fixed bottom-24 right-5 z-40 flex items-center gap-3 rounded-full bg-gold px-6 py-4 font-semibold text-ink shadow-[0_12px_45px_rgba(212,175,55,.34)] transition hover:scale-105"
+            className="fixed bottom-24 right-5 z-40 hidden items-center gap-3 rounded-full bg-gold px-6 py-4 font-semibold text-ink shadow-[0_12px_45px_rgba(212,175,55,.34)] transition hover:scale-105 lg:flex"
           >
             <ShoppingCart size={19} />
             Ver carrinho ({selection.count})
@@ -1173,6 +1174,8 @@ export function HomePage() {
           </>
         )}
       </AnimatePresence>
+
+      <MobileNav activeTab="inicio" cartCount={selection.count} onCartClick={() => setCartOpen(true)} />
     </main>
   );
 }
