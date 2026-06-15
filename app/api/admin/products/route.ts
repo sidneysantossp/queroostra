@@ -30,6 +30,14 @@ function mapProduct(row: Record<string, unknown>): ProductRecord {
   const images = Array.isArray(row.product_images)
     ? (row.product_images as { storage_path: string; is_primary: boolean }[])
     : [];
+  const category = row.product_categories as
+    | { name?: string }
+    | { name?: string }[]
+    | null
+    | undefined;
+  const categoryName = Array.isArray(category)
+    ? category[0]?.name
+    : category?.name;
   return {
     id: String(row.id),
     externalKey: row.external_key ? String(row.external_key) : undefined,
@@ -39,6 +47,7 @@ function mapProduct(row: Record<string, unknown>): ProductRecord {
     fullDescription: String(row.full_description ?? ""),
     type: row.product_type as ProductRecord["type"],
     category: String(row.category_id ?? ""),
+    categoryName: categoryName ? String(categoryName) : undefined,
     price: Number(row.price),
     promotionalPrice:
       row.promotional_price === null || row.promotional_price === undefined
@@ -68,7 +77,7 @@ export async function GET() {
 
   const { data, error } = await context.supabase
     .from("products")
-    .select("*, product_images(storage_path, is_primary)")
+    .select("*, product_images(storage_path, is_primary), product_categories(name)")
     .order("display_order");
   if (error) {
     return NextResponse.json({ error: "Não foi possível carregar os produtos." }, { status: 500 });

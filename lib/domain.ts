@@ -107,6 +107,7 @@ export type ProductRecord = {
   fullDescription: string;
   type: "fresh" | "gratinated" | "beverage";
   category: string;
+  categoryName?: string;
   price: number;
   promotionalPrice?: number;
   stock: number;

@@ -40,6 +40,12 @@ import { supabaseConfigured } from "@/lib/supabase/config";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const PRODUCTS_KEY = "quero-ostra-admin-products";
 const ADDONS_KEY = "quero-ostra-admin-addons";
+const categoryNames: Record<string, string> = {
+  experiencias: "Experiências",
+  bebidas: "Bebidas",
+  "10000000-0000-4000-8000-000000000001": "Experiências",
+  "10000000-0000-4000-8000-000000000002": "Bebidas",
+};
 
 const mockOrders = [
   sampleOrder,
@@ -247,7 +253,43 @@ export function AdminProductsPage() {
       <AdminHeading eyebrow="Catálogo" title="Produtos" description="Gerencie experiências, bebidas, estoque, destaque e visibilidade." action={<Link href="/admin/produtos/novo" className="gold-button"><Plus size={16} /> Novo produto</Link>} />
       <div className="mt-7 rounded-2xl border border-white/10 bg-[#0A0A0A] p-4"><label className="relative block"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} className="field pl-11" placeholder="Buscar produto" /></label></div>
       <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-[#0A0A0A] p-5">
-        <table className="admin-table min-w-[850px]"><thead><tr><th>Produto</th><th>Categoria</th><th>Tipo</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Destaque</th><th /></tr></thead><tbody>{filtered.map((product) => <tr key={product.id}><td><span className="font-semibold text-pearl">{product.name}</span><span className="block text-[0.62rem] text-white/25">/{product.slug}</span></td><td>{product.category}</td><td>{product.type}</td><td className="text-champagne">{money.format(product.price)}</td><td>{product.stock}</td><td><button onClick={() => save(items.map((item) => item.id === product.id ? { ...item, active: !item.active } : item))} className={product.active ? "text-emerald-200" : "text-white/25"}>{product.active ? "Ativo" : "Inativo"}</button></td><td>{product.featured ? "Sim" : "Não"}</td><td><div className="flex gap-2"><Link href={`/admin/produtos/${product.id}`} className="admin-icon-button"><Edit3 size={15} /></Link><button onClick={() => save(items.filter((item) => item.id !== product.id))} className="admin-icon-button text-red-300"><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>
+        <table className="admin-table min-w-[900px]">
+          <thead><tr><th>Produto</th><th>Categoria</th><th>Tipo</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Destaque</th><th /></tr></thead>
+          <tbody>
+            {filtered.map((product) => (
+              <tr key={product.id}>
+                <td>
+                  <div className="flex min-w-[230px] items-center gap-3">
+                    <div className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.025]">
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-contain p-1"
+                        />
+                      ) : (
+                        <ImageIcon size={20} className="text-white/20" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block truncate font-semibold text-pearl">{product.name}</span>
+                      <span className="block truncate text-[0.62rem] text-white/25">/{product.slug}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>{product.categoryName ?? categoryNames[product.category] ?? "Sem categoria"}</td>
+                <td>{product.type}</td>
+                <td className="text-champagne">{money.format(product.price)}</td>
+                <td>{product.stock}</td>
+                <td><button onClick={() => save(items.map((item) => item.id === product.id ? { ...item, active: !item.active } : item))} className={product.active ? "text-emerald-200" : "text-white/25"}>{product.active ? "Ativo" : "Inativo"}</button></td>
+                <td>{product.featured ? "Sim" : "Não"}</td>
+                <td><div className="flex gap-2"><Link href={`/admin/produtos/${product.id}`} className="admin-icon-button"><Edit3 size={15} /></Link><button onClick={() => save(items.filter((item) => item.id !== product.id))} className="admin-icon-button text-red-300"><Trash2 size={15} /></button></div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </AdminShell>
   );
