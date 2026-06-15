@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { OysterLogo } from "@/components/oyster-logo";
 import { DEMO_SESSION_KEY } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/client";
@@ -29,6 +29,28 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [emailNeedsVerification, setEmailNeedsVerification] = useState(false);
+
+  useEffect(() => {
+    const checkEmailVerification = async () => {
+      try {
+        const demoSession = window.localStorage.getItem(DEMO_SESSION_KEY);
+        if (demoSession) {
+          const parsed = JSON.parse(demoSession) as { emailVerified?: boolean };
+          setEmailNeedsVerification(parsed.emailVerified === false);
+          return;
+        }
+      } catch {
+        window.localStorage.removeItem(DEMO_SESSION_KEY);
+      }
+
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data } = await supabase.auth.getUser();
+      setEmailNeedsVerification(Boolean(data.user && !data.user.email_confirmed_at));
+    };
+    void checkEmailVerification();
+  }, []);
 
   async function signOut() {
     window.localStorage.removeItem(DEMO_SESSION_KEY);
@@ -106,6 +128,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       {menuOpen && <button type="button" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} className="fixed inset-0 z-50 bg-black/70 lg:hidden" />}
 
       <div className="min-h-screen pt-20 lg:ml-72">
+        {emailNeedsVerification && (
+          <div className="sticky top-20 z-40 border-b border-gold/30 bg-gold px-5 py-3 text-sm font-semibold text-ink md:px-8">
+            Confirme seu e-mail para liberar todos os recursos da conta. Enviamos a validação depois do checkout, sem interromper sua reserva.
+          </div>
+        )}
         <div className="mx-auto max-w-[1240px] px-5 py-8 md:px-8 md:py-10">
           {children}
         </div>

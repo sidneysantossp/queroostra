@@ -340,10 +340,13 @@ export function CheckoutPage() {
       return;
     }
 
-    setAuthLoading(true);
     const supabase = createClient();
+    if (!supabase) {
+      setAuthMessage("Supabase não configurado.");
+      return;
+    }
+    setAuthLoading(true);
     try {
-      if (!supabase) throw new Error("Supabase não configurado.");
       if (authMode === "quick") {
         const { error } = await supabase.auth.signInWithOtp({
           email: data.email,

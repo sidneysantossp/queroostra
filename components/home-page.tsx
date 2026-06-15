@@ -391,7 +391,7 @@ export function HomePage() {
           </button>
 
           <button
-            className="grid size-11 place-items-center rounded-full border border-white/15 lg:hidden"
+            className="grid size-11 place-items-center rounded-full lg:hidden"
             onClick={() => setMenuOpen((open) => !open)}
             aria-label="Abrir menu"
           >
@@ -455,14 +455,14 @@ export function HomePage() {
 
         <div className="relative mx-auto flex w-full max-w-[1320px] items-center px-5 py-24 md:px-8 lg:py-10">
           <div className="max-w-[650px] lg:w-[43%] lg:max-w-[520px]">
-            <div className="mb-8 flex items-center gap-3 text-[0.66rem] font-semibold uppercase tracking-[0.24em] text-champagne lg:mb-5 lg:text-[0.58rem]">
+            <div className="mb-8 flex items-center justify-center lg:justify-start gap-3 text-[0.66rem] font-semibold uppercase tracking-[0.24em] text-champagne lg:mb-5 lg:text-[0.58rem]">
               <span className="h-px w-10 bg-gold lg:w-7" />
               Ostras frescas • selecionadas • entregues para você
             </div>
-            <h1 className="font-display text-[3.8rem] font-medium uppercase leading-[0.88] tracking-[-0.04em] sm:text-7xl md:text-[6.6rem] lg:text-[4.45rem] lg:leading-[0.91]">
+            <h1 className="font-display text-[3.8rem] font-medium uppercase leading-[0.88] tracking-[-0.04em] sm:text-7xl md:text-[6.6rem] lg:text-[4.45rem] lg:leading-[0.91] text-center lg:text-left">
               {siteContent.title}
             </h1>
-            <p className="mt-8 max-w-xl text-base font-light leading-7 text-white/75 md:text-lg md:leading-8 lg:mt-5 lg:max-w-[420px] lg:text-sm lg:leading-6">
+            <p className="mt-8 max-w-xl text-base font-light leading-7 text-white/75 md:text-lg md:leading-8 lg:mt-5 lg:max-w-[420px] lg:text-sm lg:leading-6 text-center lg:text-left mx-auto lg:mx-0">
               {siteContent.subtitle}
             </p>
 

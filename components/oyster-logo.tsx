@@ -39,7 +39,7 @@ export function OysterLogo({
         />
       </svg>
       {!compact && (
-        <div className="leading-none">
+        <div className="leading-none whitespace-nowrap">
           <div
             className={`font-display text-[1.55rem] font-semibold tracking-[0.04em] ${
               light ? "text-ink" : "text-pearl"
