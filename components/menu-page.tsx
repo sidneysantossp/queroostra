@@ -3,13 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
   Beer,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CupSoda,
   GlassWater,
   Minus,
@@ -43,6 +45,106 @@ const categoryIcons: Record<string, LucideIcon> = {
   cervejas: Beer,
   vinhos: Wine,
 };
+
+function MenuCarousel({
+  children,
+  label,
+}: {
+  children: ReactNode[];
+  label: string;
+}) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [slidesPerView, setSlidesPerView] = useState(2);
+  const [paused, setPaused] = useState(false);
+  const maxSlide = Math.max(0, children.length - slidesPerView);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateSlidesPerView = () => setSlidesPerView(mediaQuery.matches ? 3 : 2);
+    updateSlidesPerView();
+    mediaQuery.addEventListener("change", updateSlidesPerView);
+    return () => mediaQuery.removeEventListener("change", updateSlidesPerView);
+  }, []);
+
+  useEffect(() => {
+    setActiveSlide((current) => Math.min(current, maxSlide));
+  }, [maxSlide]);
+
+  useEffect(() => {
+    if (
+      maxSlide === 0 ||
+      paused ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setActiveSlide((current) => (current >= maxSlide ? 0 : current + 1));
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [maxSlide, paused]);
+
+  function move(direction: -1 | 1) {
+    setActiveSlide((current) => {
+      if (direction === 1) return current >= maxSlide ? 0 : current + 1;
+      return current <= 0 ? maxSlide : current - 1;
+    });
+  }
+
+  return (
+    <>
+      <div className="mt-8 flex items-center justify-between gap-4">
+        <p className="text-[0.6rem] uppercase tracking-[0.16em] text-white/35">
+          Rotação automática
+        </p>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => move(-1)} className="carousel-arrow" aria-label={`Ver itens anteriores de ${label}`}>
+            <ChevronLeft size={19} />
+          </button>
+          <button type="button" onClick={() => move(1)} className="carousel-arrow" aria-label={`Ver próximos itens de ${label}`}>
+            <ChevronRight size={19} />
+          </button>
+        </div>
+      </div>
+      <div
+        className="menu-carousel-viewport mt-3"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
+        <div
+          className="menu-carousel-track"
+          style={
+            {
+              transform:
+                slidesPerView === 3
+                  ? `translate3d(calc(-${activeSlide * (100 / 3)}% - ${activeSlide * 0.3333}rem), 0, 0)`
+                  : `translate3d(calc(-${activeSlide * 50}% - ${activeSlide * 0.375}rem), 0, 0)`,
+            } as CSSProperties
+          }
+        >
+          {children}
+        </div>
+      </div>
+      {maxSlide > 0 && (
+        <div className="mt-5 flex justify-center gap-2" aria-label={`Posição do carrossel ${label}`}>
+          {Array.from({ length: maxSlide + 1 }, (_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              className={`h-1.5 rounded-full transition-all ${
+                activeSlide === index ? "w-9 bg-gold" : "w-4 bg-white/20"
+              }`}
+              aria-label={`Ir para posição ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
 function QuantityControl({
   id,
@@ -323,7 +425,7 @@ export function MenuPage() {
             description="As mesmas experiências da nossa vitrine, reunidas no cardápio para facilitar sua escolha."
           />
 
-          <div className="mt-14 grid gap-7 lg:grid-cols-2">
+          <MenuCarousel label="Experiências com ostras">
             {displayExperiences.map((product) => {
               const quantity = quantities[product.id] ?? 0;
               const subtotal = product.price * quantity;
@@ -349,31 +451,31 @@ export function MenuPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#090909] via-transparent to-transparent" />
                   </div>
-                  <div className="p-7 md:p-9">
+                  <div className="p-4 sm:p-5 lg:p-7 xl:p-9">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-gold">
                       Tipo de experiência
                     </p>
-                    <h2 className="mt-3 font-display text-4xl text-pearl">{product.name}</h2>
+                    <h2 className="mt-2 font-display text-2xl leading-tight text-pearl sm:text-3xl lg:mt-3 lg:text-4xl">{product.name}</h2>
 
-                    <ul className="mt-7 grid gap-3 border-y border-white/10 py-6 sm:grid-cols-2">
+                    <ul className="mt-4 grid gap-2 border-y border-white/10 py-4 lg:mt-7 lg:gap-3 lg:py-6 xl:grid-cols-2">
                       {[product.size, ...product.details].map((detail) => (
-                        <li key={detail} className="flex items-center gap-2 text-sm text-white/55">
+                        <li key={detail} className="flex items-start gap-2 text-[0.68rem] leading-5 text-white/55 lg:text-sm">
                           <Check size={15} className="text-gold" />
                           {detail}
                         </li>
                       ))}
                     </ul>
 
-                    <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="mt-5 flex flex-col gap-4 lg:mt-7 xl:flex-row xl:items-end xl:justify-between">
                       <div>
                         <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
                           {quantity > 0 ? `${quantity} ${quantity === 1 ? "porção" : "porções"}` : "Por porção"}
                         </p>
-                        <p className="mt-1 font-display text-4xl font-semibold text-champagne">
+                        <p className="mt-1 font-display text-2xl font-semibold text-champagne lg:text-4xl">
                           {money.format(quantity > 0 ? subtotal : product.price)}
                         </p>
                       </div>
-                      <div className="flex flex-col items-start gap-2 sm:items-end">
+                      <div className="flex flex-col items-start gap-2 xl:items-end">
                         <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/40">
                           Quantidade
                         </span>
@@ -389,7 +491,7 @@ export function MenuPage() {
                 </article>
               );
             })}
-          </div>
+          </MenuCarousel>
         </div>
       </section>
 
@@ -424,7 +526,7 @@ export function MenuPage() {
                     </div>
                   </div>
 
-                  <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <MenuCarousel label={category.name}>
                     {category.products.map((product) => {
                       const quantity = quantities[product.id] ?? 0;
                       const subtotal = product.price * quantity;
@@ -446,10 +548,10 @@ export function MenuPage() {
                               />
                             </div>
                           )}
-                          <div className="p-6">
+                          <div className="p-4 lg:p-6">
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <h3 className="font-display text-2xl text-pearl">{product.name}</h3>
+                                <h3 className="font-display text-xl leading-tight text-pearl lg:text-2xl">{product.name}</h3>
                                 <p className="mt-2 text-xs uppercase tracking-[0.12em] text-white/35">
                                   {product.description}
                                 </p>
@@ -457,12 +559,12 @@ export function MenuPage() {
                               <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
                             </div>
 
-                            <div className="mt-7 flex flex-col items-start justify-between gap-5 border-t border-white/10 pt-6 sm:flex-row sm:items-end">
+                            <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-5 xl:mt-7 xl:flex-row xl:items-end xl:gap-5 xl:pt-6">
                               <div>
                                 <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
                                   {quantity > 0 ? "Subtotal" : "Unidade"}
                                 </p>
-                                <p className="mt-1 font-display text-3xl text-champagne">
+                                <p className="mt-1 font-display text-2xl text-champagne lg:text-3xl">
                                   {money.format(quantity > 0 ? subtotal : product.price)}
                                 </p>
                               </div>
@@ -477,7 +579,7 @@ export function MenuPage() {
                         </article>
                       );
                     })}
-                  </div>
+                  </MenuCarousel>
                 </section>
               );
             })}

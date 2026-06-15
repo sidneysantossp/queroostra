@@ -130,6 +130,39 @@ summary {
   will-change: transform;
 }
 
+.menu-carousel-viewport {
+  overflow: hidden;
+  padding: 1.25rem 0 2rem;
+  margin-bottom: -2rem;
+}
+
+.menu-carousel-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 0.75rem) / 2);
+  gap: 0.75rem;
+  align-items: stretch;
+  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.menu-carousel-track > * {
+  min-width: 0;
+}
+
+.menu-carousel-track .quantity-stepper {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 9rem;
+}
+
+.menu-carousel-track h2,
+.menu-carousel-track h3,
+.menu-carousel-track p,
+.menu-carousel-track li {
+  overflow-wrap: anywhere;
+}
+
 .carousel-arrow {
   display: grid;
   width: 2.9rem;
@@ -522,6 +555,17 @@ select.field option {
   .product-carousel-track {
     grid-auto-columns: calc((100% - 2rem) / 3);
     gap: 1rem;
+  }
+
+  .menu-carousel-track {
+    grid-auto-columns: calc((100% - 2rem) / 3);
+    gap: 1rem;
+  }
+
+  .menu-carousel-track .quantity-stepper {
+    grid-template-columns: 2.65rem 3.5rem 2.65rem;
+    width: fit-content;
+    max-width: none;
   }
 }
 
