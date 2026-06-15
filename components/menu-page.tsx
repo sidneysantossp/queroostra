@@ -363,7 +363,7 @@ export function MenuPage() {
           </nav>
 
           <Link
-            href="/#reserva"
+            href="/#kits"
             className="inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/70 px-3 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-champagne transition hover:bg-gold hover:text-ink sm:px-4 md:px-5 md:text-[0.68rem]"
           >
             <span className="sm:hidden">Reserva</span>
@@ -634,7 +634,7 @@ export function MenuPage() {
               <ArrowLeft size={16} />
               Página inicial
             </Link>
-            <Link href="/#reserva" className="gold-button">
+            <Link href="/#kits" className="gold-button">
               Fazer reserva
               <ArrowRight size={16} />
             </Link>

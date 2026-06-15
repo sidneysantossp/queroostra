@@ -3,7 +3,7 @@ import { products as fallbackProducts } from "@/lib/catalog";
 import type { ProductRecord } from "@/lib/domain";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const admin = createAdminClient();
@@ -38,5 +38,8 @@ export async function GET() {
     approximateVolume: row.approximate_volume ?? undefined,
     displayOrder: row.display_order,
   }));
-  return NextResponse.json({ products });
+  return NextResponse.json(
+    { products },
+    { headers: { "Cache-Control": "no-store, max-age=0" } },
+  );
 }

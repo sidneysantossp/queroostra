@@ -7,6 +7,7 @@ import { type CSSProperties, type FormEvent, useEffect, useMemo, useState } from
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
+  Beer,
   CalendarDays,
   Check,
   ChevronDown,
@@ -14,7 +15,9 @@ import {
   ChevronRight,
   Clock3,
   CreditCard,
+  CupSoda,
   Gem,
+  GlassWater,
   Instagram,
   Mail,
   MapPin,
@@ -26,8 +29,10 @@ import {
   Plus,
   ShieldCheck,
   ShoppingBag,
+  ShoppingCart,
   Sparkles,
   Star,
+  Trash2,
   Truck,
   UtensilsCrossed,
   Wine,
@@ -35,7 +40,13 @@ import {
 } from "lucide-react";
 import { OysterLogo } from "@/components/oyster-logo";
 import { SectionTitle } from "@/components/section-title";
-import { CART_STORAGE_KEY, oysterExperiences as kits } from "@/components/catalog-data";
+import {
+  CART_STORAGE_KEY,
+  oysterExperiences as fallbackKits,
+  beverageCategories,
+} from "@/components/catalog-data";
+import type { CartProduct } from "@/components/catalog-data";
+import type { ProductRecord } from "@/lib/domain";
 import { useCheckoutStore } from "@/stores/checkout-store";
 
 const steps = [
@@ -80,6 +91,13 @@ const neighborhoods = [
   "Vila Olímpia",
 ];
 
+const categoryIcons = {
+  aguas: GlassWater,
+  refrigerantes: CupSoda,
+  cervejas: Beer,
+  vinhos: Wine,
+};
+
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -92,29 +110,38 @@ const reveal = {
   transition: { duration: 0.65, ease: "easeOut" as const },
 };
 
-function nextDeliveryDates() {
-  const dates: { value: string; weekday: string; date: string }[] = [];
-  const cursor = new Date();
-  cursor.setHours(12, 0, 0, 0);
-
-  for (let i = 2; dates.length < 4; i += 1) {
-    const candidate = new Date(cursor);
-    candidate.setDate(cursor.getDate() + i);
-    const day = candidate.getDay();
-    if (day === 4 || day === 5 || day === 6) {
-      dates.push({
-        value: candidate.toISOString().slice(0, 10),
-        weekday: candidate.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
-        date: candidate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      });
-    }
-  }
-  return dates;
-}
-
 export function HomePage() {
   const router = useRouter();
   const checkoutStore = useCheckoutStore();
+  const [liveProducts, setLiveProducts] = useState<ProductRecord[]>([]);
+  const liveProductMap = useMemo(
+    () =>
+      new Map(
+        liveProducts.map((product) => [
+          product.externalKey ?? product.id,
+          product,
+        ]),
+      ),
+    [liveProducts],
+  );
+  const kits = useMemo(
+    () =>
+      fallbackKits.map((kit) => {
+        const live = liveProductMap.get(kit.id);
+        return live
+          ? {
+              ...kit,
+              name: live.name,
+              size: live.shortDescription,
+              details: live.includedItems,
+              price: live.promotionalPrice ?? live.price,
+              image: live.image ?? kit.image,
+              tag: live.featured ? kit.tag ?? "Destaque" : undefined,
+            }
+          : kit;
+      }),
+    [liveProductMap],
+  );
   const [siteContent, setSiteContent] = useState({
     title: "O mar mais perto de você",
     subtitle:
@@ -124,23 +151,106 @@ export function HomePage() {
     heroImage: "/images/hero-oysters.png",
   });
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedKit, setSelectedKit] = useState(kits[1].id);
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     Object.fromEntries(kits.map((kit) => [kit.id, 1])),
   );
   const [activeSlide, setActiveSlide] = useState(0);
   const [slidesPerView, setSlidesPerView] = useState(1);
   const [carouselPaused, setCarouselPaused] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState("");
   const [cepResult, setCepResult] = useState<"idle" | "checking" | "covered" | "contact">("idle");
-  const deliveryDates = useMemo(() => nextDeliveryDates(), []);
-  const selected = kits.find((kit) => kit.id === selectedKit) ?? kits[1];
-  const selectedQuantity = quantities[selected.id] ?? 1;
-  const selectedTotal = selected.price * selectedQuantity;
   const maxSlide = Math.max(0, kits.length - slidesPerView);
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "");
-  const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}` : "#reserva";
+  const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}` : "#kits";
   const instagramUrl = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "#";
+
+  // Cart implementation
+  const [cartQuantities, setCartQuantities] = useState<Record<string, number>>({});
+  const [cartReady, setCartReady] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const displayCartProducts = useMemo<CartProduct[]>(
+    () => [
+      ...kits.map((product) => ({
+        id: product.id,
+        name: product.name,
+        description: product.size,
+        price: product.price,
+        category: "ostras",
+        image: product.image,
+      })),
+      ...beverageCategories.map((category) => ({
+        ...category,
+        products: category.products.map((product) => {
+          const live = liveProductMap.get(product.id);
+          return live
+            ? {
+                ...product,
+                name: live.name,
+                description: live.shortDescription,
+                price: live.promotionalPrice ?? live.price,
+                image: live.image,
+              }
+            : product;
+        }),
+      })).flatMap((category) =>
+        category.products.map((product) => ({ ...product, category: category.id })),
+      ),
+    ],
+    [liveProductMap, kits],
+  );
+
+  const cartItems = useMemo(() => {
+    return displayCartProducts
+      .filter((item) => (cartQuantities[item.id] ?? 0) > 0)
+      .map((item) => ({
+        ...item,
+        quantity: cartQuantities[item.id] ?? 0,
+      }));
+  }, [displayCartProducts, cartQuantities]);
+
+  const selection = useMemo(() => {
+    return {
+      count: cartItems.reduce((total, item) => total + item.quantity, 0),
+      total: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+    };
+  }, [cartItems]);
+
+  useEffect(() => {
+    try {
+      const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (savedCart) {
+        const parsed = JSON.parse(savedCart) as Record<string, number>;
+        setCartQuantities((current) => ({ ...current, ...parsed }));
+      }
+    } catch {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } finally {
+      setCartReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cartReady) return;
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartQuantities));
+  }, [cartReady, cartQuantities]);
+
+  useEffect(() => {
+    document.body.style.overflow = cartOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [cartOpen]);
+
+  function setQuantity(id: string, quantity: number) {
+    const nextQuantity = Math.min(20, Math.max(0, Math.round(quantity) || 0));
+    setCartQuantities((current) => ({ ...current, [id]: nextQuantity }));
+  }
+
+  function finishOrder() {
+    if (selection.count === 0) return;
+    setCartOpen(false);
+    router.push("/checkout");
+  }
 
   useEffect(() => {
     void fetch("/api/content/home")
@@ -155,6 +265,21 @@ export function HomePage() {
         },
       );
   }, []);
+
+  useEffect(() => {
+    void fetch("/api/catalog", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { products?: ProductRecord[] } | null) => {
+        if (data?.products) setLiveProducts(data.products);
+      });
+  }, []);
+
+  useEffect(() => {
+    setQuantities((current) => ({
+      ...Object.fromEntries(kits.map((kit) => [kit.id, 1])),
+      ...current,
+    }));
+  }, [kits]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
@@ -187,13 +312,15 @@ export function HomePage() {
   }
 
   function chooseKit(id: string) {
-    setSelectedKit(id);
-    window.setTimeout(() => scrollTo("reserva"), 120);
+    const q = quantities[id] ?? 1;
+    const currentQty = cartQuantities[id] ?? 0;
+    const nextQuantity = currentQty + q;
+    setCartQuantities((current) => ({ ...current, [id]: nextQuantity }));
+    setCartOpen(true);
   }
 
   function setKitQuantity(id: string, quantity: number) {
     const nextQuantity = Math.min(20, Math.max(1, Math.round(quantity) || 1));
-    setSelectedKit(id);
     setQuantities((current) => ({ ...current, [id]: nextQuantity }));
   }
 
@@ -214,25 +341,6 @@ export function HomePage() {
     window.setTimeout(() => {
       setCepResult(digits.length === 8 ? "covered" : "contact");
     }, 650);
-  }
-
-  function submitReservation(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const cart = { [selected.id]: selectedQuantity };
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    checkoutStore.setCart([{ id: selected.id, quantity: selectedQuantity }]);
-    checkoutStore.setDates(deliveryDate ? [deliveryDate] : []);
-    checkoutStore.setCustomer({
-      fullName: String(form.get("nome") ?? ""),
-      whatsapp: String(form.get("whatsapp") ?? ""),
-      email: String(form.get("email") ?? ""),
-      alternatePhone: String(form.get("telefone") ?? ""),
-    });
-    checkoutStore.setAddress({ cep: String(form.get("cep") ?? "") });
-    checkoutStore.setNotes(String(form.get("observacoes") ?? ""));
-    checkoutStore.setCurrentStep(1);
-    router.push("/checkout");
   }
 
   return (
@@ -268,7 +376,7 @@ export function HomePage() {
           </nav>
 
           <button
-            onClick={() => scrollTo("reserva")}
+            onClick={() => scrollTo("kits")}
             className="hidden items-center gap-2 rounded-full border border-gold/70 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-champagne transition hover:bg-gold hover:text-ink lg:flex"
           >
             <CalendarDays size={15} />
@@ -304,7 +412,7 @@ export function HomePage() {
                 ["Como funciona", "como-funciona"],
                 ["Por que escolher", "experiencia"],
                 ["Área de entrega", "entrega"],
-                ["Fazer reserva", "reserva"],
+                ["Fazer reserva", "kits"],
               ].map(([label, id]) => (
                 <button
                   key={id}
@@ -722,7 +830,7 @@ export function HomePage() {
                     {cepResult === "checking" && <span className="text-white/50">Consultando área...</span>}
                     {cepResult === "covered" && (
                       <span className="flex items-center gap-2 text-champagne">
-                        <Check size={16} /> CEP recebido. Confirme o endereço na reserva.
+                        <Check size={16} /> CEP atendido! Adicione itens ao carrinho e continue.
                       </span>
                     )}
                     {cepResult === "contact" && (
@@ -790,166 +898,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="reserva" className="border-y border-white/10 bg-charcoal py-24 md:py-32">
-        <div className="mx-auto max-w-[1280px] px-5 md:px-8">
-          <SectionTitle
-            eyebrow="Seu momento começa aqui"
-            title="Faça sua reserva"
-            description="Escolha a porção e uma data disponível. Após a confirmação do pagamento, iniciaremos a compra e a preparação do seu pedido."
-          />
 
-          <div className="mt-14 grid gap-8 lg:grid-cols-[.72fr_1.28fr]">
-            <motion.aside {...reveal} className="h-fit rounded-2xl border border-gold/25 bg-[#080808] p-6 md:p-8 lg:sticky lg:top-28">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-gold">
-                Resumo da reserva
-              </p>
-              <div className="mt-6 flex gap-4">
-                <div className="relative size-24 shrink-0 overflow-hidden rounded-xl">
-                  <Image src={selected.image} alt={selected.name} fill unoptimized={selected.image.startsWith("http")} className="object-cover" sizes="96px" />
-                </div>
-                <div>
-                  <h3 className="font-display text-2xl text-pearl">{selected.name}</h3>
-                  <p className="mt-1 text-sm text-white/45">{selected.size}</p>
-                  <p className="mt-3 font-display text-2xl text-champagne">{money.format(selectedTotal)}</p>
-                </div>
-              </div>
-
-              <div className="mt-7 space-y-4 border-y border-white/10 py-6 text-sm">
-                <div className="flex items-center justify-between text-white/50">
-                  <span>Quantidade selecionada</span>
-                  <span className="text-pearl">
-                    {selectedQuantity} {selectedQuantity === 1 ? "porção" : "porções"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-white/50">
-                  <span>Entrega</span>
-                  <span className="text-pearl">Calculada por CEP</span>
-                </div>
-                <div className="flex items-center justify-between text-white/50">
-                  <span>Total parcial</span>
-                  <span className="font-semibold text-champagne">{money.format(selectedTotal)}</span>
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-start gap-3 rounded-xl bg-gold/[0.06] p-4">
-                <ShieldCheck className="mt-0.5 shrink-0 text-gold" size={19} />
-                <p className="text-xs leading-5 text-white/50">
-                  Ambiente seguro. O pagamento será processado somente após a revisão final.
-                </p>
-              </div>
-            </motion.aside>
-
-            <motion.form
-              {...reveal}
-              onSubmit={submitReservation}
-              className="rounded-2xl border border-white/10 bg-[#090909] p-6 md:p-9"
-            >
-              <fieldset>
-                <legend className="font-display text-2xl text-pearl">1. Escolha a porção</legend>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {kits.map((kit) => (
-                    <button
-                      type="button"
-                      key={kit.id}
-                      onClick={() => setSelectedKit(kit.id)}
-                      className={`rounded-xl border p-4 text-left transition ${
-                        selectedKit === kit.id
-                          ? "border-gold bg-gold/[0.08]"
-                          : "border-white/10 hover:border-white/25"
-                      }`}
-                    >
-                      <span className="block text-sm font-medium text-pearl">{kit.name}</span>
-                      <span className="mt-1 block text-xs text-white/40">
-                        {quantities[kit.id] ?? 1} {(quantities[kit.id] ?? 1) === 1 ? "porção" : "porções"} •{" "}
-                        {money.format(kit.price * (quantities[kit.id] ?? 1))}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <input type="hidden" name="categoria" value={selected.name} />
-                <input type="hidden" name="quantidade" value={selectedQuantity} />
-                <input type="hidden" name="valor-parcial" value={selectedTotal.toFixed(2)} />
-              </fieldset>
-
-              <fieldset className="mt-9 border-t border-white/10 pt-8">
-                <legend className="font-display text-2xl text-pearl">2. Selecione a data</legend>
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {deliveryDates.map((option) => (
-                    <button
-                      type="button"
-                      key={option.value}
-                      onClick={() => setDeliveryDate(option.value)}
-                      className={`rounded-xl border px-3 py-4 text-center transition ${
-                        deliveryDate === option.value
-                          ? "border-gold bg-gold text-ink"
-                          : "border-white/10 hover:border-gold/50"
-                      }`}
-                    >
-                      <span className="block text-[0.62rem] font-bold uppercase tracking-[0.16em] opacity-65">
-                        {option.weekday}
-                      </span>
-                      <span className="mt-2 block font-display text-xl capitalize">{option.date}</span>
-                    </button>
-                  ))}
-                </div>
-                <input type="hidden" name="data-entrega" value={deliveryDate} required />
-              </fieldset>
-
-              <fieldset className="mt-9 border-t border-white/10 pt-8">
-                <legend className="font-display text-2xl text-pearl">3. Seus dados</legend>
-                <div className="mt-5 grid gap-5 md:grid-cols-2">
-                  <label className="field-label">
-                    Nome completo
-                    <input required name="nome" autoComplete="name" className="field" placeholder="Como podemos chamar você?" />
-                  </label>
-                  <label className="field-label">
-                    WhatsApp
-                    <input required name="whatsapp" inputMode="tel" autoComplete="tel" className="field" placeholder="(11) 99999-9999" />
-                  </label>
-                  <label className="field-label md:col-span-2">
-                    E-mail
-                    <input required type="email" name="email" autoComplete="email" className="field" placeholder="voce@email.com" />
-                  </label>
-                  <label className="field-label">
-                    CEP
-                    <input required name="cep" inputMode="numeric" autoComplete="postal-code" className="field" placeholder="00000-000" />
-                  </label>
-                  <label className="field-label">
-                    Telefone alternativo
-                    <input name="telefone" inputMode="tel" className="field" placeholder="Opcional" />
-                  </label>
-                  <label className="field-label md:col-span-2">
-                    Endereço de entrega
-                    <input required name="endereco" autoComplete="street-address" className="field" placeholder="Rua, número, complemento e bairro" />
-                  </label>
-                  <label className="field-label md:col-span-2">
-                    Observações
-                    <textarea name="observacoes" className="field min-h-28 resize-none" placeholder="Acesso ao condomínio, preferências ou recado para a equipe" />
-                  </label>
-                  <label className="field-label md:col-span-2">
-                    Método de pagamento
-                    <select required name="pagamento" className="field appearance-none">
-                      <option value="">Selecione uma opção</option>
-                      <option>Pix</option>
-                      <option>Cartão de crédito</option>
-                      <option>Cartão de débito</option>
-                    </select>
-                  </label>
-                </div>
-              </fieldset>
-
-              <label className="mt-6 flex cursor-pointer items-start gap-3 text-xs leading-5 text-white/45">
-                <input required type="checkbox" className="mt-1 accent-[#D4AF37]" />
-                Concordo com os termos de uso e autorizo o contato da Quero Ostra para confirmar esta reserva.
-              </label>
-
-              <button type="submit" disabled={!deliveryDate} className="gold-button mt-8 w-full justify-center disabled:cursor-not-allowed disabled:opacity-35">
-                Continuar para o checkout <ArrowRight size={17} />
-              </button>
-            </motion.form>
-          </div>
-        </div>
-      </section>
 
       <section id="faq" className="py-24 md:py-28">
         <div className="mx-auto max-w-4xl px-5 md:px-8">
@@ -1012,7 +961,7 @@ export function HomePage() {
             <div className="footer-links">
               <a href={whatsappUrl}>Fale conosco</a>
               <a href={whatsappUrl}>WhatsApp</a>
-              <button onClick={() => scrollTo("reserva")}>Acompanhe seu pedido</button>
+              <Link href="/dashboard">Acompanhe seu pedido</Link>
             </div>
           </div>
 
@@ -1052,6 +1001,178 @@ export function HomePage() {
       >
         <MessageCircle size={23} />
       </a>
+
+      <AnimatePresence>
+        {selection.count > 0 && !cartOpen && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.85, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.85, y: 30 }}
+            type="button"
+            onClick={() => setCartOpen(true)}
+            className="fixed bottom-24 right-5 z-40 flex items-center gap-3 rounded-full bg-gold px-6 py-4 font-semibold text-ink shadow-[0_12px_45px_rgba(212,175,55,.34)] transition hover:scale-105"
+          >
+            <ShoppingCart size={19} />
+            Ver carrinho ({selection.count})
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {cartOpen && (
+          <>
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              type="button"
+              aria-label="Fechar carrinho"
+              onClick={() => setCartOpen(false)}
+              className="fixed inset-0 z-[70] cursor-default bg-black/70 backdrop-blur-sm"
+            />
+            <motion.aside
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-y-0 right-0 z-[80] flex w-full max-w-[520px] flex-col border-l border-gold/20 bg-[#080808] shadow-[-30px_0_90px_rgba(0,0,0,.55)]"
+              aria-label="Carrinho de compras"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-6 md:px-7">
+                <div>
+                  <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-gold">
+                    Sua seleção
+                  </p>
+                  <h2 className="mt-2 font-display text-3xl text-pearl">
+                    {selection.count} {selection.count === 1 ? "item" : "itens"} no carrinho
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCartOpen(false)}
+                  className="grid size-11 place-items-center rounded-full border border-white/10 text-white/60 transition hover:border-gold hover:text-gold"
+                  aria-label="Fechar carrinho"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-5 py-5 md:px-7">
+                {cartItems.length === 0 ? (
+                  <div className="grid min-h-64 place-items-center text-center">
+                    <div>
+                      <ShoppingCart className="mx-auto text-gold" size={34} strokeWidth={1.3} />
+                      <p className="mt-4 font-display text-2xl text-pearl">Seu carrinho está vazio</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {cartItems.map((item) => {
+                      const ItemIcon = categoryIcons[item.category as keyof typeof categoryIcons] ?? ShoppingBag;
+
+                      return (
+                        <article
+                          key={item.id}
+                          className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"
+                        >
+                          <div className="flex gap-4">
+                            <div className="relative grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-black/30 text-gold">
+                              {item.image ? (
+                                <Image
+                                  src={item.image}
+                                  alt={item.name}
+                                  fill
+                                  unoptimized={item.image.startsWith("http")}
+                                  className={item.category === "ostras" ? "object-cover" : "object-contain p-2"}
+                                  sizes="80px"
+                                />
+                              ) : (
+                                <ItemIcon size={25} strokeWidth={1.4} />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <h3 className="font-display text-xl leading-tight text-pearl">
+                                    {item.name}
+                                  </h3>
+                                  <p className="mt-1 text-[0.65rem] uppercase tracking-[0.11em] text-white/35">
+                                    {item.description}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setQuantity(item.id, 0)}
+                                  className="grid size-9 shrink-0 place-items-center rounded-full text-white/35 transition hover:bg-red-500/10 hover:text-red-400"
+                                  aria-label={`Remover ${item.name}`}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                              <div className="mt-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+                                <div>
+                                  <p className="text-[0.58rem] uppercase tracking-[0.12em] text-white/30">
+                                    Subtotal
+                                  </p>
+                                  <p className="mt-1 font-display text-2xl text-champagne">
+                                    {money.format(item.price * item.quantity)}
+                                  </p>
+                                </div>
+                                <div className="quantity-stepper">
+                                  <button
+                                    type="button"
+                                    onClick={() => setQuantity(item.id, item.quantity - 1)}
+                                    aria-label={`Diminuir quantidade de ${item.name}`}
+                                  >
+                                    <Minus size={16} />
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="20"
+                                    value={item.quantity}
+                                    onChange={(event) => setQuantity(item.id, Number(event.target.value))}
+                                    aria-label={`Quantidade de ${item.name}`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setQuantity(item.id, item.quantity + 1)}
+                                    aria-label={`Aumentar quantidade de ${item.name}`}
+                                  >
+                                    <Plus size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-white/10 bg-[#050505] px-5 py-6 md:px-7">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-white/55">Preço total</span>
+                  <span className="font-display text-3xl font-semibold text-champagne">
+                    {money.format(selection.total)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={finishOrder}
+                  disabled={selection.count === 0}
+                  className="gold-button mt-5 w-full justify-center disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  Finalizar compra
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
