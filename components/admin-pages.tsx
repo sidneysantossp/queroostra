@@ -544,6 +544,7 @@ export function AdminSettingsPage() {
   const [pixExpirationHours, setPixExpirationHours] = useState(24);
   const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const [webhookSecretConfigured, setWebhookSecretConfigured] = useState(false);
+  const [persistenceConfigured, setPersistenceConfigured] = useState(true);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("/api/webhooks/asaas");
@@ -562,6 +563,7 @@ export function AdminSettingsPage() {
         pixExpirationHours: number;
         apiKeyConfigured: boolean;
         webhookSecretConfigured: boolean;
+        persistenceConfigured: boolean;
       };
       setEnvironment(data.environment);
       setPixEnabled(data.pixEnabled);
@@ -570,6 +572,7 @@ export function AdminSettingsPage() {
       setPixExpirationHours(data.pixExpirationHours);
       setApiKeyConfigured(data.apiKeyConfigured);
       setWebhookSecretConfigured(data.webhookSecretConfigured);
+      setPersistenceConfigured(data.persistenceConfigured);
     };
     void load();
   }, []);
@@ -591,7 +594,7 @@ export function AdminSettingsPage() {
       }),
     });
     const data = (await response.json()) as { saved?: boolean; error?: string };
-    if (!response.ok) {
+    if (!response.ok || !data.saved) {
       setError(data.error ?? "Não foi possível salvar.");
       return;
     }
@@ -643,14 +646,21 @@ export function AdminSettingsPage() {
         <aside className="admin-panel">
           <ShieldCheck className="text-gold" size={26} />
           <h2 className="mt-5 font-display text-3xl">Status da integração</h2>
-          <div className={`mt-5 flex items-center gap-3 rounded-xl border p-4 ${apiKeyConfigured ? "border-emerald-400/20 bg-emerald-400/[0.05]" : "border-amber-400/20 bg-amber-400/[0.05]"}`}>
-            <span className={`size-2 rounded-full ${apiKeyConfigured ? "bg-emerald-300" : "bg-amber-300"}`} />
-            <p className={`text-sm ${apiKeyConfigured ? "text-emerald-100" : "text-amber-100"}`}>
-              {apiKeyConfigured ? "Credencial configurada" : "Aguardando credencial"}
+          <div className={`mt-5 flex items-center gap-3 rounded-xl border p-4 ${apiKeyConfigured && webhookSecretConfigured && persistenceConfigured ? "border-emerald-400/20 bg-emerald-400/[0.05]" : "border-amber-400/20 bg-amber-400/[0.05]"}`}>
+            <span className={`size-2 rounded-full ${apiKeyConfigured && webhookSecretConfigured && persistenceConfigured ? "bg-emerald-300" : "bg-amber-300"}`} />
+            <p className={`text-sm ${apiKeyConfigured && webhookSecretConfigured && persistenceConfigured ? "text-emerald-100" : "text-amber-100"}`}>
+              {apiKeyConfigured && webhookSecretConfigured && persistenceConfigured
+                ? "Integração configurada"
+                : !persistenceConfigured
+                  ? "Persistência indisponível"
+                  : `Falta configurar: ${[
+                      !apiKeyConfigured ? "Token Asaas" : "",
+                      !webhookSecretConfigured ? "Webhook secret" : "",
+                    ].filter(Boolean).join(" e ")}`}
             </p>
           </div>
           <p className="mt-5 text-xs leading-6 text-white/35">
-            O token é criptografado com AES-256-GCM. Configure `SETTINGS_ENCRYPTION_KEY` no ambiente do servidor.
+            O token é criptografado com AES-256-GCM. Configure `SETTINGS_ENCRYPTION_KEY` e `SUPABASE_SERVICE_ROLE_KEY` no ambiente do servidor.
           </p>
         </aside>
       </div>

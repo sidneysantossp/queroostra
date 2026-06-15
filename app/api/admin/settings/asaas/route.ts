@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminContext } from "@/lib/admin-auth";
 import { loadAsaasSettings, saveAsaasSettings } from "@/lib/secure-settings";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
   environment: z.enum(["sandbox", "production"]),
@@ -15,6 +16,7 @@ const schema = z.object({
 
 export async function GET() {
   const context = await getAdminContext();
+  const persistenceConfigured = Boolean(createAdminClient());
   if (!context.configured) {
     return NextResponse.json({
       environment: "sandbox",
@@ -24,6 +26,7 @@ export async function GET() {
       pixExpirationHours: 24,
       apiKeyConfigured: false,
       webhookSecretConfigured: false,
+      persistenceConfigured,
       demo: true,
     });
   }
@@ -40,6 +43,7 @@ export async function GET() {
     pixExpirationHours: settings.pixExpirationHours,
     apiKeyConfigured: Boolean(settings.apiKey),
     webhookSecretConfigured: Boolean(settings.webhookSecret),
+    persistenceConfigured,
   });
 }
 
@@ -57,6 +61,15 @@ export async function PUT(request: Request) {
 
   try {
     const result = await saveAsaasSettings(parsed.data, context.user.id);
+    if (!result.saved) {
+      return NextResponse.json(
+        {
+          error:
+            "Configuração não persistida. Verifique SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente da Vercel.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(
