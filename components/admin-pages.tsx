@@ -543,6 +543,7 @@ export function AdminSettingsPage() {
   const [installments, setInstallments] = useState(1);
   const [pixExpirationHours, setPixExpirationHours] = useState(24);
   const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
+  const [webhookSecretConfigured, setWebhookSecretConfigured] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("/api/webhooks/asaas");
@@ -560,6 +561,7 @@ export function AdminSettingsPage() {
         installments: number;
         pixExpirationHours: number;
         apiKeyConfigured: boolean;
+        webhookSecretConfigured: boolean;
       };
       setEnvironment(data.environment);
       setPixEnabled(data.pixEnabled);
@@ -567,6 +569,7 @@ export function AdminSettingsPage() {
       setInstallments(data.installments);
       setPixExpirationHours(data.pixExpirationHours);
       setApiKeyConfigured(data.apiKeyConfigured);
+      setWebhookSecretConfigured(data.webhookSecretConfigured);
     };
     void load();
   }, []);
@@ -594,6 +597,7 @@ export function AdminSettingsPage() {
     }
     setSaved(true);
     if (apiKey) setApiKeyConfigured(true);
+    if (webhookSecret) setWebhookSecretConfigured(true);
     setApiKey("");
     setWebhookSecret("");
   }
@@ -623,7 +627,7 @@ export function AdminSettingsPage() {
             </label>
             <label className="field-label md:col-span-2">
               Webhook secret
-              <input value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} type="password" className="field" placeholder="Digite para cadastrar ou substituir" />
+              <input value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} type="password" className="field" placeholder={webhookSecretConfigured ? "Webhook já configurado. Digite para substituir." : "Digite para cadastrar"} />
             </label>
             <AdminField label="URL de webhook" value={webhookUrl} onChange={() => undefined} span />
           </div>
@@ -634,6 +638,7 @@ export function AdminSettingsPage() {
           <button onClick={saveSettings} className="gold-button mt-6"><Save size={16} /> Salvar configuração</button>
           {saved && <p className="mt-4 text-sm text-emerald-200">Configuração salva com segurança.</p>}
           {error && <p className="mt-4 text-sm text-red-200">{error}</p>}
+          {(apiKeyConfigured || webhookSecretConfigured) && <p className="mt-4 text-xs leading-6 text-white/35">Por segurança, os tokens salvos não são exibidos novamente. Use os campos apenas quando quiser substituir uma credencial.</p>}
         </section>
         <aside className="admin-panel">
           <ShieldCheck className="text-gold" size={26} />
