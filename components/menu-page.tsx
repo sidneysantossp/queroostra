@@ -132,6 +132,7 @@ export function MenuPage() {
                 name: live.name,
                 description: live.shortDescription,
                 price: live.promotionalPrice ?? live.price,
+                image: live.image,
               }
             : product;
         }),
@@ -431,33 +432,47 @@ export function MenuPage() {
                       return (
                         <article
                           key={product.id}
-                          className="rounded-2xl border border-white/10 bg-[#080808] p-6 transition hover:border-gold/40"
+                          className="overflow-hidden rounded-2xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
                         >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <h3 className="font-display text-2xl text-pearl">{product.name}</h3>
-                              <p className="mt-2 text-xs uppercase tracking-[0.12em] text-white/35">
-                                {product.description}
-                              </p>
+                          {product.image && (
+                            <div className="relative aspect-[16/9] overflow-hidden border-b border-white/10 bg-black/30">
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                fill
+                                unoptimized={product.image.startsWith("http")}
+                                className="object-cover transition duration-700 hover:scale-105"
+                                sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                              />
                             </div>
-                            <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
-                          </div>
+                          )}
+                          <div className="p-6">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <h3 className="font-display text-2xl text-pearl">{product.name}</h3>
+                                <p className="mt-2 text-xs uppercase tracking-[0.12em] text-white/35">
+                                  {product.description}
+                                </p>
+                              </div>
+                              <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
+                            </div>
 
-                          <div className="mt-7 flex flex-col items-start justify-between gap-5 border-t border-white/10 pt-6 sm:flex-row sm:items-end">
-                            <div>
-                              <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
-                                {quantity > 0 ? "Subtotal" : "Unidade"}
-                              </p>
-                              <p className="mt-1 font-display text-3xl text-champagne">
-                                {money.format(quantity > 0 ? subtotal : product.price)}
-                              </p>
+                            <div className="mt-7 flex flex-col items-start justify-between gap-5 border-t border-white/10 pt-6 sm:flex-row sm:items-end">
+                              <div>
+                                <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
+                                  {quantity > 0 ? "Subtotal" : "Unidade"}
+                                </p>
+                                <p className="mt-1 font-display text-3xl text-champagne">
+                                  {money.format(quantity > 0 ? subtotal : product.price)}
+                                </p>
+                              </div>
+                              <QuantityControl
+                                id={product.id}
+                                name={product.name}
+                                quantity={quantity}
+                                onChange={setQuantity}
+                              />
                             </div>
-                            <QuantityControl
-                              id={product.id}
-                              name={product.name}
-                              quantity={quantity}
-                              onChange={setQuantity}
-                            />
                           </div>
                         </article>
                       );
