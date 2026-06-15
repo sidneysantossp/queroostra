@@ -32,7 +32,6 @@ import {
 import type { CartProduct } from "@/components/catalog-data";
 import type { ProductRecord } from "@/lib/domain";
 import { OysterLogo } from "@/components/oyster-logo";
-import { MobileNav } from "@/components/mobile-nav";
 import { SectionTitle } from "@/components/section-title";
 
 const money = new Intl.NumberFormat("pt-BR", {
@@ -312,7 +311,26 @@ export function MenuPage() {
   useEffect(() => {
     if (!cartReady) return;
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(quantities));
+    window.dispatchEvent(new Event("cart-updated"));
   }, [cartReady, quantities]);
+
+  useEffect(() => {
+    const handleOpenCart = () => setCartOpen(true);
+    window.addEventListener("open-cart-drawer", handleOpenCart);
+
+    // Check if ?cart=open is in URL
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("cart") === "open") {
+      setCartOpen(true);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("cart");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+
+    return () => {
+      window.removeEventListener("open-cart-drawer", handleOpenCart);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = cartOpen ? "hidden" : "";
@@ -335,7 +353,7 @@ export function MenuPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-ink text-pearl pb-20 lg:pb-0">
+    <main className="min-h-screen overflow-hidden bg-ink text-pearl">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between gap-3 px-5 md:px-8">
           <Link href="/" aria-label="Voltar para a página inicial" className="shrink-0">
@@ -799,8 +817,6 @@ export function MenuPage() {
           </>
         )}
       </AnimatePresence>
-
-      <MobileNav activeTab="cardapio" cartCount={selection.count} onCartClick={() => setCartOpen(true)} />
     </main>
   );
 }

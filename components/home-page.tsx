@@ -48,7 +48,6 @@ import {
 import type { CartProduct } from "@/components/catalog-data";
 import type { ProductRecord } from "@/lib/domain";
 import { useCheckoutStore } from "@/stores/checkout-store";
-import { MobileNav } from "@/components/mobile-nav";
 
 const steps = [
   {
@@ -233,7 +232,14 @@ export function HomePage() {
   useEffect(() => {
     if (!cartReady) return;
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartQuantities));
+    window.dispatchEvent(new Event("cart-updated"));
   }, [cartReady, cartQuantities]);
+
+  useEffect(() => {
+    const handleOpenCart = () => setCartOpen(true);
+    window.addEventListener("open-cart-drawer", handleOpenCart);
+    return () => window.removeEventListener("open-cart-drawer", handleOpenCart);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = cartOpen ? "hidden" : "";
@@ -345,7 +351,7 @@ export function HomePage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-ink text-pearl pb-20 lg:pb-0">
+    <main className="min-h-screen overflow-hidden bg-ink text-pearl">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between px-5 md:px-8 lg:h-[72px]">
           <button onClick={() => scrollTo("inicio")} aria-label="Voltar ao início">
@@ -1174,8 +1180,6 @@ export function HomePage() {
           </>
         )}
       </AnimatePresence>
-
-      <MobileNav activeTab="inicio" cartCount={selection.count} onCartClick={() => setCartOpen(true)} />
     </main>
   );
 }

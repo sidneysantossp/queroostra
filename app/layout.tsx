@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { GlobalMobileNav } from "@/components/global-mobile-nav";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -63,7 +64,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <GlobalMobileNav />
+      </body>
     </html>
   );
 }
