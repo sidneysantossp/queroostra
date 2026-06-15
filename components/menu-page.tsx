@@ -435,13 +435,13 @@ export function MenuPage() {
                           className="overflow-hidden rounded-2xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
                         >
                           {product.image && (
-                            <div className="relative aspect-[16/9] overflow-hidden border-b border-white/10 bg-black/30">
+                            <div className="relative aspect-[16/9] overflow-hidden border-b border-white/10 bg-[#050505]">
                               <Image
                                 src={product.image}
                                 alt={product.name}
                                 fill
                                 unoptimized={product.image.startsWith("http")}
-                                className="object-cover transition duration-700 hover:scale-105"
+                                className="object-contain p-4 transition duration-700 hover:scale-105"
                                 sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
                               />
                             </div>
@@ -624,7 +624,7 @@ export function MenuPage() {
                                   alt={item.name}
                                   fill
                                   unoptimized={item.image.startsWith("http")}
-                                  className="object-cover"
+                                  className={item.category === "ostras" ? "object-cover" : "object-contain p-2"}
                                   sizes="80px"
                                 />
                               ) : (

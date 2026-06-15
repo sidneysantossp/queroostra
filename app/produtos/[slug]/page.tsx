@@ -92,7 +92,7 @@ export default async function ProductDetailPage({
             fill
             priority
             unoptimized={Boolean(product.image?.startsWith("http"))}
-            className="object-cover"
+            className={product.type === "beverage" ? "object-contain p-6" : "object-cover"}
             sizes="(max-width: 1023px) 100vw, 50vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
