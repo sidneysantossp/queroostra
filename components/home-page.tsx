@@ -516,6 +516,7 @@ export function HomePage() {
                         src={kit.image}
                         alt={kit.name}
                         fill
+                        unoptimized={kit.image.startsWith("http")}
                         className="object-cover transition duration-700 group-hover:scale-105"
                         sizes="(max-width: 767px) 100vw, 50vw"
                       />
@@ -804,7 +805,7 @@ export function HomePage() {
               </p>
               <div className="mt-6 flex gap-4">
                 <div className="relative size-24 shrink-0 overflow-hidden rounded-xl">
-                  <Image src={selected.image} alt={selected.name} fill className="object-cover" sizes="96px" />
+                  <Image src={selected.image} alt={selected.name} fill unoptimized={selected.image.startsWith("http")} className="object-cover" sizes="96px" />
                 </div>
                 <div>
                   <h3 className="font-display text-2xl text-pearl">{selected.name}</h3>
