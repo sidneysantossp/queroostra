@@ -1160,7 +1160,14 @@ export function CheckoutPage() {
                 <CalendarDays size={16} />
                 {store.selectedDates.length} {store.selectedDates.length === 1 ? "data selecionada" : "datas selecionadas"}
               </div>
-              {store.deliveryWindow && <p className="mt-2 text-xs text-white/45">{store.deliveryWindow}</p>}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {store.selectedDates.map((date) => (
+                  <span key={date} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/60">
+                    {format(new Date(`${date}T12:00:00`), "dd/MM", { locale: ptBR })}
+                    {store.deliveryWindow ? ` · ${store.deliveryWindow}` : ""}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
