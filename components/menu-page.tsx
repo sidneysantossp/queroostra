@@ -578,7 +578,7 @@ export function MenuPage() {
                               <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
                             </div>
 
-                            <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-5 xl:mt-7 xl:flex-row xl:items-end xl:gap-5 xl:pt-6">
+                            <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-5 xl:mt-7 xl:flex-row xl:items-end xl:gap-5 xl:pt-6 flex-1">
                               <div>
                                 <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
                                   {quantity > 0 ? "Subtotal" : "Unidade"}
