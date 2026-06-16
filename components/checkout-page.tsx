@@ -536,6 +536,42 @@ export function CheckoutPage() {
 
   async function createOrder() {
     setSubmitError("");
+
+    // --- Pre-validação: redirecionar para a etapa incompleta ---
+    const cpfDigits = (store.customer.cpfCnpj ?? "").replace(/\D/g, "");
+    const whatsDigits = (store.customer.whatsapp ?? "").replace(/\D/g, "");
+    if (
+      !store.customer.fullName?.trim() ||
+      !store.customer.email?.trim() ||
+      !cpfDigits ||
+      (cpfDigits.length !== 11 && cpfDigits.length !== 14) ||
+      whatsDigits.length < 10
+    ) {
+      goToStep(2);
+      setCustomerEntry("email");
+      setSubmitError("Preencha todos os dados de cliente antes de finalizar.");
+      return;
+    }
+
+    const a = store.address;
+    if (!a.cep || !a.street || !a.number || !a.neighborhood || !a.city || !a.state) {
+      goToStep(3);
+      setSubmitError("Preencha o endereço de entrega antes de finalizar.");
+      return;
+    }
+
+    if (!reviewed) {
+      goToStep(4);
+      setSubmitError("Confirme a revisão do pedido antes de finalizar.");
+      return;
+    }
+    if (!acceptedTerms) {
+      goToStep(4);
+      setSubmitError("Aceite os termos para continuar.");
+      return;
+    }
+    // --- Fim da pre-validação ---
+
     setSubmitting(true);
     try {
       const currentAddress = addressForm.getValues();
@@ -559,8 +595,23 @@ export function CheckoutPage() {
       const data = (await response.json()) as {
         order?: typeof store.lastOrder;
         error?: string;
+        fields?: Record<string, string[]>;
       };
       if (!response.ok || !data.order) {
+        // Redirecionar automaticamente com base no campo inválido retornado pelo servidor
+        if (data.fields) {
+          const fieldKeys = Object.keys(data.fields);
+          const customerFields = ["customer.fullName", "customer.email", "customer.cpfCnpj", "customer.whatsapp"];
+          const addressFields = ["address.cep", "address.street", "address.number", "address.neighborhood", "address.city", "address.state"];
+          if (fieldKeys.some((k) => customerFields.some((cf) => k.includes(cf)))) {
+            goToStep(2);
+            setCustomerEntry("email");
+          } else if (fieldKeys.some((k) => addressFields.some((af) => k.includes(af)))) {
+            goToStep(3);
+          } else if (fieldKeys.some((k) => k.includes("reviewed") || k.includes("acceptedTerms"))) {
+            goToStep(4);
+          }
+        }
         throw new Error(data.error ?? "Não foi possível criar a reserva.");
       }
 
@@ -873,6 +924,12 @@ export function CheckoutPage() {
                     </div>
                   )}
 
+                  {submitError && store.currentStep === 2 && (
+                    <div className="mt-5 rounded-xl border border-red-400/25 bg-red-400/[0.06] p-4 text-sm text-red-200">
+                      {submitError}
+                    </div>
+                  )}
+
                   <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
                     <button type="button" onClick={() => customerEntry === "email" ? setCustomerEntry("choices") : goToStep(1)} className="outline-button flex-1 justify-center">
                       <ArrowLeft size={16} /> Voltar
@@ -976,6 +1033,12 @@ export function CheckoutPage() {
                     </div>
                   )}
 
+                  {submitError && store.currentStep === 3 && (
+                    <div className="mt-5 rounded-xl border border-red-400/25 bg-red-400/[0.06] p-4 text-sm text-red-200">
+                      {submitError}
+                    </div>
+                  )}
+
                   <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
                     <button type="button" onClick={() => goToStep(2)} className="outline-button flex-1 justify-center"><ArrowLeft size={16} /> Voltar</button>
                     <button type="submit" className="gold-button flex-1 justify-center">Revisar pedido <ArrowRight size={17} /></button>
@@ -1042,6 +1105,12 @@ export function CheckoutPage() {
                       Li e aceito os termos de compra, política de entrega, conservação e consumo.
                     </label>
                   </div>
+
+                  {submitError && store.currentStep === 4 && (
+                    <div className="mt-5 rounded-xl border border-red-400/25 bg-red-400/[0.06] p-4 text-sm text-red-200">
+                      {submitError}
+                    </div>
+                  )}
 
                   <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
                     <button type="button" onClick={() => goToStep(3)} className="outline-button flex-1 justify-center"><ArrowLeft size={16} /> Voltar</button>
