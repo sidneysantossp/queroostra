@@ -47,6 +47,8 @@ import {
 } from "@/components/catalog-data";
 import type { CartProduct } from "@/components/catalog-data";
 import type { ProductRecord } from "@/lib/domain";
+import { createClient } from "@/lib/supabase/client";
+import { supabaseConfigured } from "@/lib/supabase/config";
 import { useCheckoutStore } from "@/stores/checkout-store";
 
 const steps = [
@@ -97,6 +99,8 @@ const categoryIcons = {
   cervejas: Beer,
   vinhos: Wine,
 };
+
+const AUTH_NEXT_STORAGE_KEY = "qo-auth-next";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -167,6 +171,42 @@ export function HomePage() {
   const [cartQuantities, setCartQuantities] = useState<Record<string, number>>({});
   const [cartReady, setCartReady] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  useEffect(() => {
+    if (!supabaseConfigured || window.location.pathname !== "/") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code) return;
+
+    let active = true;
+    const supabase = createClient();
+    if (!supabase) return;
+
+    void supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (!active) return;
+
+      params.delete("code");
+      params.delete("error");
+      params.delete("error_code");
+      params.delete("error_description");
+
+      if (!error) {
+        const storedNext = window.sessionStorage.getItem(AUTH_NEXT_STORAGE_KEY);
+        window.sessionStorage.removeItem(AUTH_NEXT_STORAGE_KEY);
+        const next = storedNext?.startsWith("/") ? storedNext : "/checkout";
+        router.replace(next);
+        return;
+      }
+
+      const query = params.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   const displayCartProducts = useMemo<CartProduct[]>(
     () => [

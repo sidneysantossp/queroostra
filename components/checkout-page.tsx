@@ -65,6 +65,8 @@ const steps = [
   { id: 5, label: "Pagamento", icon: CreditCard },
 ];
 
+const AUTH_NEXT_STORAGE_KEY = "qo-auth-next";
+
 type CustomerForm = z.infer<typeof customerSchema>;
 type AddressForm = z.infer<typeof addressSchema>;
 
@@ -303,10 +305,13 @@ export function CheckoutPage() {
     try {
       if (supabaseConfigured) {
         const supabase = createClient();
+        const redirectTo = new URL("/auth/callback", window.location.origin);
+        redirectTo.searchParams.set("next", "/checkout");
+        window.sessionStorage.setItem(AUTH_NEXT_STORAGE_KEY, "/checkout");
         const { error } = await supabase!.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=/checkout`,
+            redirectTo: redirectTo.toString(),
           },
         });
         if (error) throw error;

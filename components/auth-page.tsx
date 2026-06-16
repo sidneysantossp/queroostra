@@ -13,6 +13,8 @@ import { DEMO_SESSION_KEY } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
 
+const AUTH_NEXT_STORAGE_KEY = "qo-auth-next";
+
 const loginSchema = z.object({
   email: z.email("Informe um e-mail válido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
@@ -83,10 +85,13 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     try {
       if (supabaseConfigured) {
         const supabase = createClient();
+        const redirectTo = new URL("/auth/callback", window.location.origin);
+        redirectTo.searchParams.set("next", next);
+        window.sessionStorage.setItem(AUTH_NEXT_STORAGE_KEY, next);
         const { error } = await supabase!.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+            redirectTo: redirectTo.toString(),
           },
         });
         if (error) throw error;
