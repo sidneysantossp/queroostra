@@ -198,6 +198,46 @@ export function CheckoutPage() {
     void syncAuthenticatedCart();
   }, [ready]);
 
+  useEffect(() => {
+    if (!ready || !supabaseConfigured || store.currentStep !== 2) return;
+
+    let active = true;
+    const continueAuthenticatedCustomer = async () => {
+      const supabase = createClient();
+      const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+      if (!active || !data.user) return;
+
+      const metadata = data.user.user_metadata as {
+        full_name?: string;
+        name?: string;
+        whatsapp?: string;
+        phone?: string;
+      };
+      const customer = {
+        fullName:
+          store.customer.fullName ||
+          metadata.full_name ||
+          metadata.name ||
+          data.user.email?.split("@")[0] ||
+          "",
+        email: store.customer.email || data.user.email || "",
+        whatsapp: store.customer.whatsapp || metadata.whatsapp || metadata.phone || "",
+        alternatePhone: store.customer.alternatePhone || "",
+      };
+
+      store.setCustomer(customer);
+      customerForm.reset(customer);
+      setCustomerEntry("email");
+      goToStep(3);
+    };
+
+    void continueAuthenticatedCustomer();
+
+    return () => {
+      active = false;
+    };
+  }, [customerForm, ready, store, store.currentStep]);
+
   const cartDetails = useMemo(
     () =>
       store.cart
