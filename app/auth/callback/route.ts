@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") || "/checkout";
+  const next = url.searchParams.get("next") || "/auth/finish";
   const supabase = await createClient();
 
   if (code && supabase) {

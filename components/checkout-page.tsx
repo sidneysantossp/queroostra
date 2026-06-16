@@ -306,7 +306,6 @@ export function CheckoutPage() {
       if (supabaseConfigured) {
         const supabase = createClient();
         const redirectTo = new URL("/auth/callback", window.location.origin);
-        redirectTo.searchParams.set("next", "/checkout");
         window.sessionStorage.setItem(AUTH_NEXT_STORAGE_KEY, "/checkout");
         const { error } = await supabase!.auth.signInWithOAuth({
           provider: "google",
