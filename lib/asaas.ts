@@ -4,6 +4,7 @@ import { loadAsaasSettings } from "@/lib/secure-settings";
 type AsaasCustomerInput = {
   name: string;
   email: string;
+  cpfCnpj: string;
   phone: string;
   postalCode: string;
   address: string;

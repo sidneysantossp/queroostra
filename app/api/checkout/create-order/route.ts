@@ -231,6 +231,7 @@ export async function POST(request: Request) {
       const customer = await createAsaasCustomer({
         name: payload.customer.fullName,
         email: payload.customer.email,
+        cpfCnpj: payload.customer.cpfCnpj,
         phone: payload.customer.whatsapp,
         postalCode: payload.address.cep,
         address: payload.address.street,

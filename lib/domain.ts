@@ -38,6 +38,7 @@ export type DeliveryAddress = {
 export type CustomerData = {
   fullName: string;
   email: string;
+  cpfCnpj: string;
   whatsapp: string;
   alternatePhone?: string;
 };

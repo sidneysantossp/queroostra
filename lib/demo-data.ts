@@ -37,6 +37,7 @@ export const sampleOrder: CreatedOrder = {
   customer: {
     fullName: "Cliente Quero Ostra",
     email: "cliente@queroostra.com.br",
+    cpfCnpj: "12345678909",
     whatsapp: "11999999999",
   },
   address: {

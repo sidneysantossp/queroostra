@@ -116,6 +116,7 @@ export function CheckoutPage() {
     defaultValues: {
       fullName: "",
       email: "",
+      cpfCnpj: "",
       whatsapp: "",
       alternatePhone: "",
     },
@@ -174,6 +175,7 @@ export function CheckoutPage() {
     customerForm.reset({
       fullName: latest.customer.fullName ?? "",
       email: latest.customer.email ?? "",
+      cpfCnpj: latest.customer.cpfCnpj ?? "",
       whatsapp: latest.customer.whatsapp ?? "",
       alternatePhone: latest.customer.alternatePhone ?? "",
     });
@@ -202,7 +204,7 @@ export function CheckoutPage() {
   }, [ready]);
 
   useEffect(() => {
-    if (store.currentStep !== 2) {
+    if (store.currentStep < 2) {
       socialCustomerHandledRef.current = false;
     }
   }, [store.currentStep]);
@@ -230,6 +232,22 @@ export function CheckoutPage() {
         whatsapp?: string;
         phone?: string;
       };
+
+      let profileCpfCnpj = "";
+      let profileWhatsapp = "";
+      try {
+        const res = await fetch("/api/profile", { cache: "no-store" });
+        if (res.ok) {
+          const profileData = (await res.json()) as {
+            profile?: { cpf_cnpj?: string; whatsapp?: string };
+          };
+          profileCpfCnpj = profileData?.profile?.cpf_cnpj ?? "";
+          profileWhatsapp = profileData?.profile?.whatsapp ?? "";
+        }
+      } catch {
+        /* profile fetch is best-effort */
+      }
+
       const customer = {
         fullName:
           store.customer.fullName ||
@@ -238,14 +256,15 @@ export function CheckoutPage() {
           data.user.email?.split("@")[0] ||
           "",
         email: store.customer.email || data.user.email || "",
-        whatsapp: store.customer.whatsapp || metadata.whatsapp || metadata.phone || "",
+        cpfCnpj: store.customer.cpfCnpj || profileCpfCnpj || "",
+        whatsapp: store.customer.whatsapp || profileWhatsapp || metadata.whatsapp || metadata.phone || "",
         alternatePhone: store.customer.alternatePhone || "",
       };
 
       store.setCustomer(customer);
       customerForm.reset(customer);
       setCustomerEntry("email");
-      if (!customer.whatsapp.replace(/\D/g, "")) return;
+      if (!customer.whatsapp.replace(/\D/g, "") || !customer.cpfCnpj.replace(/\D/g, "")) return;
       goToStep(3);
     };
 
@@ -820,6 +839,16 @@ export function CheckoutPage() {
                       <input {...customerForm.register("fullName")} className="field" placeholder="Como podemos chamar você?" />
                       <FieldError message={customerForm.formState.errors.fullName?.message} />
                     </label>
+                    <label className="field-label md:col-span-2">
+                      E-mail
+                      <input {...customerForm.register("email")} className="field" type="email" placeholder="voce@email.com" />
+                      <FieldError message={customerForm.formState.errors.email?.message} />
+                    </label>
+                    <label className="field-label">
+                      CPF ou CNPJ
+                      <input {...customerForm.register("cpfCnpj")} className="field" inputMode="numeric" placeholder="Digite apenas números" />
+                      <FieldError message={customerForm.formState.errors.cpfCnpj?.message} />
+                    </label>
                     <label className="field-label">
                       WhatsApp
                       <input {...customerForm.register("whatsapp")} className="field" inputMode="tel" placeholder="(11) 99999-9999" />
@@ -829,11 +858,6 @@ export function CheckoutPage() {
                       Telefone alternativo
                       <input {...customerForm.register("alternatePhone")} className="field" inputMode="tel" placeholder="Opcional" />
                       <FieldError message={customerForm.formState.errors.alternatePhone?.message} />
-                    </label>
-                    <label className="field-label md:col-span-2">
-                      E-mail
-                      <input {...customerForm.register("email")} className="field" type="email" placeholder="voce@email.com" />
-                      <FieldError message={customerForm.formState.errors.email?.message} />
                     </label>
                     {authMode !== "quick" && (
                       <label className="field-label md:col-span-2">
@@ -969,7 +993,7 @@ export function CheckoutPage() {
                       <UserRound className="text-gold" size={20} />
                       <p className="review-label">Cliente</p>
                       <p className="review-value">{store.customer.fullName}</p>
-                      <p className="review-copy">{store.customer.email}<br />{store.customer.whatsapp}</p>
+                      <p className="review-copy">{store.customer.email}<br />CPF/CNPJ {store.customer.cpfCnpj}<br />{store.customer.whatsapp}</p>
                       <button type="button" onClick={() => goToStep(2)} className="review-edit">Editar</button>
                     </div>
                     <div className="review-card">

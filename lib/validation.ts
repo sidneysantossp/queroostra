@@ -10,9 +10,22 @@ const cepSchema = z
   .transform((value) => value.replace(/\D/g, ""))
   .pipe(z.string().length(8, "Informe um CEP válido"));
 
+const documentSchema = z
+  .string()
+  .transform((value) => value.replace(/\D/g, ""))
+  .pipe(
+    z
+      .string()
+      .refine(
+        (value) => value.length === 11 || value.length === 14,
+        "Informe um CPF ou CNPJ válido",
+      ),
+  );
+
 export const customerSchema = z.object({
   fullName: z.string().trim().min(3, "Informe seu nome completo"),
   email: z.email("Informe um e-mail válido"),
+  cpfCnpj: documentSchema,
   whatsapp: phoneSchema,
   alternatePhone: z.union([phoneSchema, z.literal("")]).optional(),
 });

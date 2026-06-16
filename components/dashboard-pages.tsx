@@ -404,9 +404,10 @@ export function AddressesPage() {
 
 export function ProfilePage() {
   const [profile, setProfile] = useState({
-    fullName: "Cliente Quero Ostra",
-    email: "cliente@queroostra.com.br",
-    whatsapp: "11999999999",
+    fullName: "",
+    email: "",
+    cpfCnpj: "",
+    whatsapp: "",
     alternatePhone: "",
     communicationPreferences: { email: true, whatsapp: true },
   });
@@ -415,11 +416,12 @@ export function ProfilePage() {
     if (!supabaseConfigured) return;
     void fetch("/api/profile", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
-      .then((data: { profile?: { full_name: string; email: string; whatsapp: string; alternate_phone?: string; communication_preferences?: { email: boolean; whatsapp: boolean } } } | null) => {
+      .then((data: { profile?: { full_name: string; email: string; cpf_cnpj?: string; whatsapp: string; alternate_phone?: string; communication_preferences?: { email: boolean; whatsapp: boolean } } } | null) => {
         if (!data?.profile) return;
         setProfile({
           fullName: data.profile.full_name,
           email: data.profile.email,
+          cpfCnpj: data.profile.cpf_cnpj ?? "",
           whatsapp: data.profile.whatsapp ?? "",
           alternatePhone: data.profile.alternate_phone ?? "",
           communicationPreferences: data.profile.communication_preferences ?? { email: true, whatsapp: true },
@@ -454,6 +456,7 @@ export function ProfilePage() {
           <div className="grid gap-5 md:grid-cols-2">
             <label className="field-label md:col-span-2">Nome completo<input className="field" value={profile.fullName} onChange={(event) => setProfile({ ...profile, fullName: event.target.value })} /></label>
             <label className="field-label">E-mail<input className="field" value={profile.email} disabled /></label>
+            <label className="field-label">CPF ou CNPJ<input className="field" value={profile.cpfCnpj} onChange={(event) => setProfile({ ...profile, cpfCnpj: event.target.value.replace(/\D/g, "") })} placeholder="Apenas números" /></label>
             <label className="field-label">WhatsApp<input className="field" value={profile.whatsapp} onChange={(event) => setProfile({ ...profile, whatsapp: event.target.value })} /></label>
           </div>
           <button type="submit" className="gold-button mt-7">Salvar alterações <ArrowRight size={16} /></button>
