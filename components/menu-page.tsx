@@ -556,7 +556,7 @@ export function MenuPage() {
                           className="overflow-hidden rounded-2xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
                         >
                           {product.image && (
-                            <div className="relative aspect-[16/9] overflow-hidden border-b border-white/10 bg-[#050505]">
+                            <div className="relative aspect-[4/5] overflow-hidden border-b border-white/10 bg-[#050505]">
                               <Image
                                 src={product.image}
                                 alt={product.name}
