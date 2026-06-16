@@ -27,6 +27,7 @@ import {
   CreditCard,
   Loader2,
   LockKeyhole,
+  Mail,
   MapPin,
   PackageCheck,
   QrCode,
@@ -92,6 +93,7 @@ export function CheckoutPage() {
   const [availability, setAvailability] = useState<Record<string, Availability>>({});
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [authMode, setAuthMode] = useState<"quick" | "login" | "signup">("quick");
+  const [customerEntry, setCustomerEntry] = useState<"choices" | "email">("choices");
   const [password, setPassword] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -326,16 +328,18 @@ export function CheckoutPage() {
     setAuthMessage("");
     store.setCustomer(data);
 
-    if (!supabaseConfigured) {
+    const isQuickMode = authMode === "quick";
+
+    if (!supabaseConfigured || isQuickMode) {
       window.localStorage.setItem(
         DEMO_SESSION_KEY,
-        JSON.stringify({ email: data.email, name: data.fullName, role: "customer" }),
+        JSON.stringify({ email: data.email, name: data.fullName, role: "customer", emailVerified: false }),
       );
       goToStep(3);
       return;
     }
 
-    if (authMode !== "quick" && password.length < 6) {
+    if (!isQuickMode && password.length < 6) {
       setAuthMessage("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
@@ -347,20 +351,7 @@ export function CheckoutPage() {
     }
     setAuthLoading(true);
     try {
-      if (authMode === "quick") {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: data.email,
-          options: {
-            shouldCreateUser: true,
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/checkout`,
-            data: { full_name: data.fullName, whatsapp: data.whatsapp },
-          },
-        });
-        if (error) throw error;
-        setAuthMessage(
-          "Enviamos um link seguro para seu e-mail. Seu carrinho e esta etapa já estão salvos.",
-        );
-      } else if (authMode === "login") {
+      if (authMode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email,
           password,
@@ -510,10 +501,16 @@ export function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-ink text-pearl">
-      <header className="border-b border-white/10 bg-[#050505]">
+    <main className="min-h-screen bg-ink pt-20 text-pearl">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between px-5 md:px-8">
           <Link href="/"><OysterLogo /></Link>
+          <nav className="hidden items-center gap-7 lg:flex">
+            <Link href="/cardapio" className="text-[0.69rem] font-semibold uppercase tracking-[0.16em] text-white/65 transition hover:text-champagne">Cardápio</Link>
+            <Link href="/#kits" className="text-[0.69rem] font-semibold uppercase tracking-[0.16em] text-white/65 transition hover:text-champagne">Porções</Link>
+            <Link href="/#entrega" className="text-[0.69rem] font-semibold uppercase tracking-[0.16em] text-white/65 transition hover:text-champagne">Entrega</Link>
+            <Link href="/dashboard" className="text-[0.69rem] font-semibold uppercase tracking-[0.16em] text-white/65 transition hover:text-champagne">Conta</Link>
+          </nav>
           <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.15em] text-white/45">
             <LockKeyhole size={15} className="text-gold" />
             Checkout seguro
@@ -547,7 +544,7 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      <section className="mx-auto grid max-w-[1380px] gap-8 px-5 py-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_410px] lg:py-14">
+      <section className={`mx-auto grid max-w-[1380px] gap-8 px-5 py-10 md:px-8 ${store.currentStep === 5 ? "lg:grid-cols-[minmax(0,1fr)_410px]" : ""} lg:py-14`}>
         <div className="min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -683,7 +680,18 @@ export function CheckoutPage() {
                     Entre ou crie sua conta para acompanhar sua reserva com segurança.
                   </p>
 
-                  <div className="mt-7 grid grid-cols-3 gap-2 rounded-xl bg-black/30 p-1.5">
+                  {customerEntry === "choices" && (
+                    <div className="mt-8 space-y-3">
+                      <button type="button" disabled={authLoading} onClick={loginWithGoogle} className="flex w-full items-center justify-center gap-3 rounded-full border border-white/10 bg-white/5 py-4 text-sm font-semibold text-pearl transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50">
+                        Continuar com o Google
+                      </button>
+                      <button type="button" onClick={() => setCustomerEntry("email")} className="outline-button w-full justify-center">
+                        <Mail size={17} /> Entrar com e-mail
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="hidden">
                     {[
                       ["quick", "Cadastro rápido"],
                       ["login", "Entrar"],
@@ -706,7 +714,7 @@ export function CheckoutPage() {
                     </div>
                   )}
 
-                  <div className="mt-7 grid gap-5 md:grid-cols-2">
+                  {customerEntry === "email" && <div className="mt-7 grid gap-5 md:grid-cols-2">
                     <label className="field-label md:col-span-2">
                       Nome completo
                       <input {...customerForm.register("fullName")} className="field" placeholder="Como podemos chamar você?" />
@@ -733,7 +741,7 @@ export function CheckoutPage() {
                         <input value={password} onChange={(event) => setPassword(event.target.value)} className="field" type="password" placeholder="Mínimo de 6 caracteres" />
                       </label>
                     )}
-                  </div>
+                  </div>}
 
                   {authMessage && (
                     <div className="mt-5 rounded-xl border border-gold/25 bg-gold/[0.06] p-4 text-sm leading-6 text-champagne">
@@ -742,18 +750,18 @@ export function CheckoutPage() {
                   )}
 
                   <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
-                    <button type="button" onClick={() => goToStep(1)} className="outline-button flex-1 justify-center">
+                    <button type="button" onClick={() => customerEntry === "email" ? setCustomerEntry("choices") : goToStep(1)} className="outline-button flex-1 justify-center">
                       <ArrowLeft size={16} /> Voltar
                     </button>
-                    <button disabled={authLoading} type="submit" className="gold-button flex-1 justify-center disabled:opacity-50">
+                    {customerEntry === "email" && <button disabled={authLoading} type="submit" className="gold-button flex-1 justify-center disabled:opacity-50">
                       {authLoading ? <Loader2 className="animate-spin" size={17} /> : null}
-                      {authMode === "signup" ? "Criar conta" : authMode === "login" ? "Entrar e continuar" : "Continuar"}
+                      Continuar
                       {!authLoading && <ArrowRight size={17} />}
-                    </button>
+                    </button>}
                   </div>
                 </form>
 
-                <div className="mt-6">
+                <div className="hidden">
                   <div className="relative flex py-5 items-center">
                     <div className="flex-grow border-t border-white/10"></div>
                     <span className="flex-shrink mx-4 text-white/30 text-xs uppercase tracking-wider">ou</span>
@@ -972,7 +980,7 @@ export function CheckoutPage() {
           </AnimatePresence>
         </div>
 
-        <aside className="h-fit rounded-2xl border border-gold/25 bg-[#080808] p-5 lg:sticky lg:top-6">
+        {store.currentStep === 5 && <aside className="h-fit rounded-2xl border border-gold/25 bg-[#080808] p-5 lg:sticky lg:top-28">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-gold">Resumo do pedido</p>
@@ -1050,7 +1058,7 @@ export function CheckoutPage() {
           <Link href="/cardapio" className="mt-5 inline-flex items-center gap-2 text-[0.64rem] font-semibold uppercase tracking-[0.13em] text-white/40 transition hover:text-gold">
             <ArrowLeft size={15} /> Editar carrinho
           </Link>
-        </aside>
+        </aside>}
       </section>
     </main>
   );
