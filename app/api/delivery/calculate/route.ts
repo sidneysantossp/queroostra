@@ -18,32 +18,30 @@ export async function POST(request: Request) {
   const quote = await calculateDeliveryQuote(parsed.data.cep);
   let address: Record<string, string> | undefined;
 
-  if (quote.covered) {
-    try {
-      const cep = parsed.data.cep.replace(/\D/g, "");
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
-        next: { revalidate: 86400 },
-      });
-      if (response.ok) {
-        const data = (await response.json()) as {
-          erro?: boolean;
-          logradouro?: string;
-          bairro?: string;
-          localidade?: string;
-          uf?: string;
+  try {
+    const cep = parsed.data.cep.replace(/\D/g, "");
+    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+      next: { revalidate: 86400 },
+    });
+    if (response.ok) {
+      const data = (await response.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+      if (!data.erro) {
+        address = {
+          street: data.logradouro ?? "",
+          neighborhood: data.bairro ?? "",
+          city: data.localidade ?? "",
+          state: data.uf ?? "",
         };
-        if (!data.erro) {
-          address = {
-            street: data.logradouro ?? "",
-            neighborhood: data.bairro ?? "",
-            city: data.localidade ?? "",
-            state: data.uf ?? "",
-          };
-        }
       }
-    } catch {
-      // A quote remains valid even if the optional CEP lookup is unavailable.
     }
+  } catch {
+    // A quote remains valid even if the optional CEP lookup is unavailable.
   }
 
   return NextResponse.json({ ...quote, address });

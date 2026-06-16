@@ -38,7 +38,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { CART_STORAGE_KEY } from "@/components/catalog-data";
@@ -108,6 +108,7 @@ export function CheckoutPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const lastCepLookupRef = useRef("");
 
   const customerForm = useForm<CustomerForm>({
     resolver: zodResolver(customerSchema),
@@ -133,6 +134,7 @@ export function CheckoutPage() {
       instructions: "",
     },
   });
+  const watchedCep = addressForm.watch("cep");
 
   useEffect(() => {
     const load = async () => {
@@ -228,6 +230,7 @@ export function CheckoutPage() {
       store.setCustomer(customer);
       customerForm.reset(customer);
       setCustomerEntry("email");
+      if (!customer.whatsapp.replace(/\D/g, "")) return;
       goToStep(3);
     };
 
@@ -237,6 +240,20 @@ export function CheckoutPage() {
       active = false;
     };
   }, [customerForm, ready, store, store.currentStep]);
+
+  useEffect(() => {
+    if (!ready || store.currentStep !== 3) return;
+
+    const digits = watchedCep.replace(/\D/g, "");
+    if (digits.length !== 8 || digits === lastCepLookupRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      lastCepLookupRef.current = digits;
+      void lookupCep(digits);
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [ready, store.currentStep, watchedCep]);
 
   const cartDetails = useMemo(
     () =>
@@ -426,10 +443,11 @@ export function CheckoutPage() {
     }
   }
 
-  async function lookupCep() {
-    const cep = addressForm.getValues("cep");
+  async function lookupCep(cepValue?: string) {
+    const cep = (cepValue ?? addressForm.getValues("cep")).replace(/\D/g, "");
     setCepLoading(true);
     setCepMessage("");
+    addressForm.setValue("cep", cep, { shouldValidate: true });
     try {
       const response = await fetch("/api/delivery/calculate", {
         method: "POST",
@@ -444,12 +462,6 @@ export function CheckoutPage() {
         address?: Partial<AddressForm>;
         error?: string;
       };
-      if (!response.ok || !data.covered) {
-        setCepMessage(data.message ?? data.error ?? "CEP não atendido.");
-        return;
-      }
-      setDeliveryFee(data.fee ?? 18);
-      setDeliveryZone(data.zone ?? "");
       if (data.address) {
         if (data.address.street) addressForm.setValue("street", data.address.street);
         if (data.address.neighborhood)
@@ -457,6 +469,13 @@ export function CheckoutPage() {
         if (data.address.city) addressForm.setValue("city", data.address.city);
         if (data.address.state) addressForm.setValue("state", data.address.state);
       }
+      if (!response.ok || !data.covered) {
+        setDeliveryZone("");
+        setCepMessage(data.message ?? data.error ?? "CEP não atendido.");
+        return;
+      }
+      setDeliveryFee(data.fee ?? 18);
+      setDeliveryZone(data.zone ?? "");
       setCepMessage(`Entrega disponível em ${data.zone}.`);
     } finally {
       setCepLoading(false);
@@ -476,6 +495,8 @@ export function CheckoutPage() {
     setSubmitError("");
     setSubmitting(true);
     try {
+      const currentAddress = addressForm.getValues();
+      store.setAddress(currentAddress);
       const response = await fetch("/api/checkout/create-order", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -484,7 +505,7 @@ export function CheckoutPage() {
           selectedDates: store.selectedDates,
           deliveryWindow: store.deliveryWindow,
           customer: store.customer,
-          address: store.address,
+          address: currentAddress,
           paymentMethod: store.paymentMethod,
           notes: store.notes,
           reviewed,
@@ -854,7 +875,7 @@ export function CheckoutPage() {
                       CEP
                       <div className="flex gap-2">
                         <input {...addressForm.register("cep")} className="field" inputMode="numeric" placeholder="00000-000" />
-                        <button type="button" onClick={lookupCep} disabled={cepLoading} className="outline-button shrink-0 px-4">
+                        <button type="button" onClick={() => lookupCep()} disabled={cepLoading} className="outline-button shrink-0 px-4">
                           {cepLoading ? <Loader2 className="animate-spin" size={17} /> : <MapPin size={17} />}
                           <span className="hidden sm:inline">Consultar</span>
                         </button>

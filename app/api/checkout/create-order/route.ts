@@ -26,10 +26,17 @@ function createOrderNumber() {
 export async function POST(request: Request) {
   const parsed = checkoutSchema.safeParse(await request.json());
   if (!parsed.success) {
+    const fields = parsed.error.flatten().fieldErrors;
+    const details = Object.entries(fields)
+      .flatMap(([field, messages]) =>
+        (messages ?? []).map((message) => `${field}: ${message}`),
+      )
+      .join(" ");
+
     return NextResponse.json(
       {
-        error: "Revise os dados do checkout.",
-        fields: parsed.error.flatten().fieldErrors,
+        error: details ? `Revise os dados do checkout. ${details}` : "Revise os dados do checkout.",
+        fields,
       },
       { status: 400 },
     );
