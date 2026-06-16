@@ -18,6 +18,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  BadgeCheck,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -33,6 +34,7 @@ import {
   QrCode,
   ShieldCheck,
   ShoppingCart,
+  Truck,
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -1148,11 +1150,19 @@ export function CheckoutPage() {
                     </button>
                   </div>
 
-                  <div className="mt-7 flex items-start gap-3 rounded-xl border border-gold/20 bg-gold/[0.05] p-5">
-                    <ShieldCheck className="mt-0.5 shrink-0 text-gold" size={20} />
-                    <p className="text-xs leading-6 text-white/50">
-                      Os dados sensíveis de pagamento não são armazenados pela Quero Ostra. A cobrança é processada pelo Asaas.
-                    </p>
+                  <div className="mt-7 grid grid-cols-3 gap-4 text-center sm:gap-6">
+                    <div className="flex flex-col items-center gap-2 opacity-80 transition-opacity hover:opacity-100">
+                      <ShieldCheck className="text-[#C9A227]" size={24} strokeWidth={1.5} />
+                      <span className="text-[0.65rem] font-medium uppercase tracking-[0.1em] text-white/70">Compra Segura</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 opacity-80 transition-opacity hover:opacity-100">
+                      <BadgeCheck className="text-[#C9A227]" size={24} strokeWidth={1.5} />
+                      <span className="text-[0.65rem] font-medium uppercase tracking-[0.1em] text-white/70">Qualidade Garantida</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 opacity-80 transition-opacity hover:opacity-100">
+                      <Truck className="text-[#C9A227]" size={24} strokeWidth={1.5} />
+                      <span className="text-[0.65rem] font-medium uppercase tracking-[0.1em] text-white/70">Entrega Programada</span>
+                    </div>
                   </div>
 
                   {submitError && (
