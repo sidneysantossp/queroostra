@@ -652,8 +652,8 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      <section className={`mx-auto grid max-w-[1380px] gap-8 px-5 py-10 md:px-8 ${store.currentStep === 5 ? "lg:grid-cols-[minmax(0,1fr)_410px]" : ""} lg:py-14`}>
-        <div className="min-w-0">
+      <section className={`mx-auto flex max-w-[1380px] flex-col gap-8 px-5 py-10 md:px-8 ${store.currentStep === 5 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_410px]" : ""} lg:py-14`}>
+        <div className={`min-w-0 ${store.currentStep === 5 ? "order-2 lg:order-1" : ""}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={store.currentStep}
@@ -1104,7 +1104,7 @@ export function CheckoutPage() {
           </AnimatePresence>
         </div>
 
-        {store.currentStep === 5 && <aside className="h-fit rounded-2xl border border-gold/25 bg-[#080808] p-5 lg:sticky lg:top-28">
+        {store.currentStep === 5 && <aside className="order-1 h-fit rounded-2xl border border-gold/25 bg-[#080808] p-5 lg:order-2 lg:sticky lg:top-28">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-gold">Resumo do pedido</p>
