@@ -130,6 +130,23 @@ summary {
   will-change: transform;
 }
 
+.product-carousel-track > * {
+  min-width: 0;
+}
+
+.product-carousel-track .quantity-stepper {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 8rem;
+}
+
+.product-carousel-track h2,
+.product-carousel-track h3,
+.product-carousel-track p,
+.product-carousel-track li {
+  overflow-wrap: anywhere;
+}
+
 .menu-carousel-viewport {
   overflow: hidden;
   padding: 1.25rem 0 2rem;
@@ -555,6 +572,12 @@ select.field option {
   .product-carousel-track {
     grid-auto-columns: calc((100% - 2rem) / 3);
     gap: 1rem;
+  }
+
+  .product-carousel-track .quantity-stepper {
+    grid-template-columns: 2.65rem 3.5rem 2.65rem;
+    width: fit-content;
+    max-width: none;
   }
 
   .menu-carousel-track {

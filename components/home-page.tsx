@@ -619,14 +619,14 @@ export function HomePage() {
                     {...reveal}
                     transition={{ ...reveal.transition, delay: index * 0.08 }}
                     whileHover={{ y: -6 }}
-                    className={`product-card group h-full ${kit.tag ? "featured-card" : ""}`}
+                    className={`product-card group flex h-full flex-col ${kit.tag ? "featured-card" : ""}`}
                   >
                     {kit.tag && (
                       <span className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-gradient px-5 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink shadow-lg">
                         {kit.tag}
                       </span>
                     )}
-                    <div className="product-card-media relative aspect-[16/10] overflow-hidden">
+                    <div className="product-card-media relative aspect-square overflow-hidden lg:aspect-[16/10]">
                       <Image
                         src={kit.image}
                         alt={kit.name}
@@ -638,27 +638,32 @@ export function HomePage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#090909] via-transparent to-transparent" />
                     </div>
 
-                    <div className="relative p-7 md:p-9">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-gold">
+                    <div className="relative flex flex-1 flex-col p-4 sm:p-5 md:p-9">
+                      <div>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[0.56rem] font-semibold uppercase tracking-[0.16em] text-gold sm:text-[0.62rem] lg:text-[0.65rem] lg:tracking-[0.2em]">
                             Tipo de experiência
                           </p>
-                          <h3 className="mt-3 font-display text-4xl text-pearl">{kit.name}</h3>
+                          <OysterLogo compact />
                         </div>
-                        <OysterLogo compact />
+                        <h3 className="mt-3 font-display text-[1.75rem] leading-[0.98] text-pearl sm:text-3xl lg:text-4xl">
+                          {kit.name}
+                        </h3>
                       </div>
 
-                      <ul className="mt-7 space-y-3 border-y border-white/10 py-6">
-                        <li className="flex items-center gap-2 text-sm text-white/75">
-                          <Check size={15} className="text-gold" /> {kit.size}
+                      <ul className="mt-5 flex-1 space-y-3 border-y border-white/10 py-5 lg:mt-7 lg:py-6">
+                        <li className="flex items-start gap-2 text-xs leading-5 text-white/75 sm:text-sm">
+                          <Check size={15} className="mt-0.5 shrink-0 text-gold" /> {kit.size}
                         </li>
                         {kit.details.map((detail) => (
-                          <li key={detail} className="flex items-center gap-2 text-sm text-white/55">
-                            <Check size={15} className="text-gold" /> {detail}
+                          <li key={detail} className="flex items-start gap-2 text-xs leading-5 text-white/55 sm:text-sm">
+                            <Check size={15} className="mt-0.5 shrink-0 text-gold" /> {detail}
                           </li>
                         ))}
-                        <li className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                      </ul>
+
+                      <div className="mt-auto flex flex-col gap-4 pt-5">
+                        <div className="flex flex-col gap-3 border-b border-white/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
                           <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/55">
                             Quantidade de porções
                           </span>
@@ -686,24 +691,24 @@ export function HomePage() {
                               <Plus size={16} />
                             </button>
                           </div>
-                        </li>
-                      </ul>
-
-                      <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                          <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
-                            {quantity} {quantity === 1 ? "porção" : "porções"}
-                          </p>
-                          <p className="mt-1 font-display text-4xl font-semibold text-champagne">
-                            {money.format(total)}
-                          </p>
-                          <p className="mt-1 text-xs text-white/35">
-                            {money.format(kit.price)} por porção
-                          </p>
                         </div>
-                        <button onClick={() => chooseKit(kit.id)} className="mini-gold-button">
-                          Selecionar <ArrowRight size={15} />
-                        </button>
+
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                          <div>
+                            <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
+                              {quantity} {quantity === 1 ? "porção" : "porções"}
+                            </p>
+                            <p className="mt-1 font-display text-[2rem] font-semibold leading-none text-champagne sm:text-4xl">
+                              {money.format(total)}
+                            </p>
+                            <p className="mt-1 text-xs text-white/35">
+                              {money.format(kit.price)} por porção
+                            </p>
+                          </div>
+                          <button onClick={() => chooseKit(kit.id)} className="mini-gold-button w-full justify-center sm:w-auto">
+                            Selecionar <ArrowRight size={15} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </motion.article>
