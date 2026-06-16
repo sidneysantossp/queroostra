@@ -73,7 +73,7 @@ const steps = [
 ];
 
 const benefits = [
-  { icon: Star, title: "Fornecedor selecionado", copy: "Origem criteriosa e compra sob demanda." },
+  { icon: Star, title: "+30 Anos Experiência", copy: "Do Físico para o Online com a mesma qualidade." },
   { icon: CalendarDays, title: "Entrega programada", copy: "Você escolhe entre as datas abertas." },
   { icon: Gem, title: "Qualidade premium", copy: "Ostras escolhidas para servir e impressionar." },
   { icon: UtensilsCrossed, title: "Experiência completa", copy: "Porções prontas para uma ocasião especial." },
@@ -764,8 +764,8 @@ export function HomePage() {
               description="Da seleção ao transporte, desenhamos uma jornada simples para servir um produto delicado com a atenção que ele exige."
             />
             <p className="border-l border-gold/35 pl-6 text-sm leading-7 text-white/45">
-              Compramos após a sua confirmação. Assim reduzimos estoque, preservamos o
-              frescor e entregamos uma experiência preparada para a sua data.
+              Excelência não está apenas no produto, mas em toda a experiência. Cada detalhe foi
+              pensado para oferecer um padrão à altura dos momentos mais especiais.
             </p>
           </div>
 
