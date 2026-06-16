@@ -625,6 +625,7 @@ export function CheckoutPage() {
         DEMO_ORDERS_KEY,
         JSON.stringify([data.order, ...saved.filter((order) => order?.id !== data.order?.id)]),
       );
+      window.localStorage.removeItem(CART_STORAGE_KEY);
       store.resetCheckout();
       router.push(`/dashboard/pedidos/${data.order.id}`);
     } catch (error) {

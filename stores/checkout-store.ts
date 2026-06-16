@@ -54,6 +54,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       setLastOrder: (lastOrder) => set({ lastOrder }),
       resetCheckout: () =>
         set({
+          cart: [],
           selectedDates: [],
           deliveryWindow: "",
           notes: "",

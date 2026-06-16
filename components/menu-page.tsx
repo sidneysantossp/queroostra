@@ -403,7 +403,7 @@ export function MenuPage() {
             sizes="100vw"
           />
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#050505_8%,rgba(5,5,5,.88)_48%,rgba(5,5,5,.65)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#050505_8%,rgba(5,5,5,.75)_48%,rgba(5,5,5,.45)_100%)]" />
         <div className="relative mx-auto max-w-[1320px] px-5 py-24 md:px-8 md:py-32">
           <Link
             href="/"
@@ -459,7 +459,7 @@ export function MenuPage() {
                       {product.tag}
                     </span>
                   )}
-                  <div className="product-card-media relative aspect-[16/9] overflow-hidden">
+                  <div className="product-card-media relative aspect-[4/3] overflow-hidden">
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -485,7 +485,7 @@ export function MenuPage() {
                       ))}
                     </ul>
 
-                    <div className="mt-5 flex flex-col gap-4 lg:mt-7 xl:flex-row xl:items-end xl:justify-between">
+                    <div className="mt-5 flex flex-col gap-4 lg:mt-7 xl:flex-row xl:items-end xl:justify-between flex-1 justify-end">
                       <div>
                         <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
                           {quantity > 0 ? `${quantity} ${quantity === 1 ? "porção" : "porções"}` : "Por porção"}
