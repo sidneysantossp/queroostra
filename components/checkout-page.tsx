@@ -109,6 +109,7 @@ export function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const lastCepLookupRef = useRef("");
+  const socialCustomerHandledRef = useRef(false);
 
   const customerForm = useForm<CustomerForm>({
     resolver: zodResolver(customerSchema),
@@ -201,13 +202,27 @@ export function CheckoutPage() {
   }, [ready]);
 
   useEffect(() => {
-    if (!ready || !supabaseConfigured || store.currentStep !== 2) return;
+    if (store.currentStep !== 2) {
+      socialCustomerHandledRef.current = false;
+    }
+  }, [store.currentStep]);
+
+  useEffect(() => {
+    if (
+      !ready ||
+      !supabaseConfigured ||
+      store.currentStep !== 2 ||
+      socialCustomerHandledRef.current
+    ) {
+      return;
+    }
 
     let active = true;
     const continueAuthenticatedCustomer = async () => {
       const supabase = createClient();
       const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
       if (!active || !data.user) return;
+      socialCustomerHandledRef.current = true;
 
       const metadata = data.user.user_metadata as {
         full_name?: string;
@@ -239,7 +254,16 @@ export function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [customerForm, ready, store, store.currentStep]);
+  }, [
+    customerForm,
+    ready,
+    store.currentStep,
+    store.customer.alternatePhone,
+    store.customer.email,
+    store.customer.fullName,
+    store.customer.whatsapp,
+    store.setCustomer,
+  ]);
 
   useEffect(() => {
     if (!ready || store.currentStep !== 3) return;
