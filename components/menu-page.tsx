@@ -49,9 +49,13 @@ const categoryIcons: Record<string, LucideIcon> = {
 function MenuCarousel({
   children,
   label,
+  trackClassName,
+  desktopSlidesPerView = 3,
 }: {
   children: ReactNode[];
   label: string;
+  trackClassName?: string;
+  desktopSlidesPerView?: number;
 }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [slidesPerView, setSlidesPerView] = useState(2);
@@ -60,11 +64,11 @@ function MenuCarousel({
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
-    const updateSlidesPerView = () => setSlidesPerView(mediaQuery.matches ? 3 : 2);
+    const updateSlidesPerView = () => setSlidesPerView(mediaQuery.matches ? desktopSlidesPerView : 2);
     updateSlidesPerView();
     mediaQuery.addEventListener("change", updateSlidesPerView);
     return () => mediaQuery.removeEventListener("change", updateSlidesPerView);
-  }, []);
+  }, [desktopSlidesPerView]);
 
   useEffect(() => {
     setActiveSlide((current) => Math.min(current, maxSlide));
@@ -114,11 +118,13 @@ function MenuCarousel({
         onBlurCapture={() => setPaused(false)}
       >
         <div
-          className="menu-carousel-track"
+          className={`menu-carousel-track ${trackClassName || ""}`}
           style={
             {
               transform:
-                slidesPerView === 3
+                slidesPerView === 4
+                  ? `translate3d(calc(-${activeSlide * (100 / 4)}% - ${activeSlide * 0.3333}rem), 0, 0)`
+                  : slidesPerView === 3
                   ? `translate3d(calc(-${activeSlide * (100 / 3)}% - ${activeSlide * 0.3333}rem), 0, 0)`
                   : `translate3d(calc(-${activeSlide * 50}% - ${activeSlide * 0.375}rem), 0, 0)`,
             } as CSSProperties
@@ -679,7 +685,7 @@ export function MenuPage() {
                     </div>
                   </div>
 
-                  <MenuCarousel label={category.name}>
+                  <MenuCarousel label={category.name} trackClassName="menu-carousel-track-compact" desktopSlidesPerView={4}>
                     {category.products.map((product) => {
                       const quantity = quantities[product.id] ?? 0;
                       const subtotal = product.price * quantity;

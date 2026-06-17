@@ -590,6 +590,17 @@ select.field option {
     width: fit-content;
     max-width: none;
   }
+
+  .menu-carousel-track-compact {
+    grid-auto-columns: calc((100% - 2rem) / 4);
+    gap: 1rem;
+  }
+
+  .menu-carousel-track-compact .quantity-stepper {
+    grid-template-columns: 2.65rem 3.5rem 2.65rem;
+    width: fit-content;
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
