@@ -161,7 +161,7 @@ export function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [slidesPerView, setSlidesPerView] = useState(1);
   const [carouselPaused, setCarouselPaused] = useState(false);
-  const [cepResult, setCepResult] = useState<"idle" | "checking" | "covered" | "contact">("idle");
+  const [cepResult, setCepResult] = useState<"idle" | "checking" | "covered" | "outside" | "contact" | "error">("idle");
   const maxSlide = Math.max(0, kits.length - slidesPerView);
   const [whatsappUrl, setWhatsappUrl] = useState(() => {
     const envNum = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "");
@@ -395,14 +395,53 @@ export function HomePage() {
     });
   }
 
-  function checkCep(event: FormEvent<HTMLFormElement>) {
+  // Bairros da Zona Sul de SP atendidos pela rota refrigerada
+  const zonaSulBairros = [
+    "moema", "vila mariana", "itaim bibi", "campo belo", "brooklin",
+    "morumbi", "santo amaro", "vila olimpia", "vila olímpia", "jardim paulista",
+    "paraíso", "paraiso", "saúde", "saude", "jabaquara", "cursino",
+    "ipiranga", "sacoma", "sacomã", "cidade ademar", "campo grande",
+    "campo limpo", "capão redondo", "capao redondo", "jardim são luís",
+    "jardim sao luis", "jardim ângela", "jardim angela", "socorro",
+    "granja julieta", "chácara santo antônio", "chacara santo antonio",
+    "alto da boa vista", "brooklin novo", "brooklin paulista",
+    "vila cordeiro", "vila cruzeiro", "americanópolis", "americanopolis",
+    "interlagos", "grajaú", "grajau", "pedreira", "cidade dutra",
+    "vila andrade", "jardim marajoara", "planalto paulista", "indianópolis",
+    "indianopolis", "vila clementino", "vila gumercindo",
+  ];
+
+  async function checkCep(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const digits = String(form.get("quick-cep") ?? "").replace(/\D/g, "");
+
+    if (digits.length !== 8) {
+      setCepResult("contact");
+      return;
+    }
+
     setCepResult("checking");
-    window.setTimeout(() => {
-      setCepResult(digits.length === 8 ? "covered" : "contact");
-    }, 650);
+
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+
+      if (data.erro) {
+        setCepResult("error");
+        return;
+      }
+
+      // Verifica se é São Paulo capital e bairro da Zona Sul
+      const cidade = (data.localidade || "").toLowerCase().trim();
+      const bairro = (data.bairro || "").toLowerCase().trim();
+      const isSP = cidade === "são paulo" || cidade === "sao paulo";
+      const isZonaSul = isSP && zonaSulBairros.some((b) => bairro.includes(b) || b.includes(bairro));
+
+      setCepResult(isZonaSul ? "covered" : "outside");
+    } catch {
+      setCepResult("error");
+    }
   }
 
   return (
@@ -915,8 +954,21 @@ export function HomePage() {
                         <Check size={16} /> CEP atendido! Adicione itens ao carrinho e continue.
                       </span>
                     )}
+                    {cepResult === "outside" && (
+                      <div className="flex flex-col gap-1">
+                        <span className="flex items-center gap-2 text-champagne">
+                          <Truck size={16} /> Frete: R$&nbsp;18,00
+                        </span>
+                        <span className="text-xs text-white/45">
+                          Frete Grátis para compras acima de R$&nbsp;199,00
+                        </span>
+                      </div>
+                    )}
                     {cepResult === "contact" && (
                       <span className="text-white/55">Digite os 8 números do CEP para consultar.</span>
+                    )}
+                    {cepResult === "error" && (
+                      <span className="text-red-400/80">CEP não encontrado. Verifique e tente novamente.</span>
                     )}
                   </motion.div>
                 )}
@@ -925,6 +977,9 @@ export function HomePage() {
           </motion.div>
 
           <motion.div {...reveal} className="relative min-h-[470px] overflow-hidden rounded-3xl border border-gold/20 bg-[#090909] p-7 md:p-10">
+            <p className="relative z-10 mb-4 text-center text-sm italic text-white/50">
+              Demais regiões, favor consultar.
+            </p>
             <div className="absolute inset-0 map-grid opacity-50" />
             <div className="absolute -right-16 -top-16 size-64 rounded-full bg-gold/10 blur-3xl" />
             <svg viewBox="0 0 620 470" className="relative h-full min-h-[390px] w-full" aria-label="Mapa estilizado da Zona Sul de São Paulo">
