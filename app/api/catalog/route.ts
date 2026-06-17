@@ -21,8 +21,12 @@ export async function GET() {
     );
     let imageUrl: string | undefined;
     if (primaryImage?.storage_path) {
-      const { data } = admin.storage.from("products").getPublicUrl(primaryImage.storage_path);
-      imageUrl = data.publicUrl;
+      if (primaryImage.storage_path.startsWith("http")) {
+        imageUrl = primaryImage.storage_path;
+      } else {
+        const { data } = admin.storage.from("products").getPublicUrl(primaryImage.storage_path);
+        imageUrl = data.publicUrl;
+      }
     }
     return {
       id: row.external_key ?? row.id,
