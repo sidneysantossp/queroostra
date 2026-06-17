@@ -476,13 +476,13 @@ export function HomePage() {
             ))}
           </nav>
 
-          <button
-            onClick={() => scrollTo("kits")}
+          <Link
+            href="/cardapio"
             className="hidden items-center gap-2 rounded-full border border-gold/70 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-champagne transition hover:bg-gold hover:text-ink lg:flex"
           >
             <CalendarDays size={15} />
             Fazer reserva
-          </button>
+          </Link>
 
           <button
             className="grid size-11 place-items-center rounded-full lg:hidden"
@@ -1147,10 +1147,13 @@ export function HomePage() {
             exit={{ opacity: 0, scale: 0.85, y: 30 }}
             type="button"
             onClick={() => setCartOpen(true)}
-            className="fixed bottom-24 right-5 z-40 hidden items-center gap-3 rounded-full bg-gold px-6 py-4 font-semibold text-ink shadow-[0_12px_45px_rgba(212,175,55,.34)] transition hover:scale-105 lg:flex"
+            className="fixed bottom-24 right-5 z-40 hidden place-items-center rounded-full bg-gold p-4 text-ink shadow-[0_12px_45px_rgba(212,175,55,.34)] transition hover:scale-105 lg:grid"
+            aria-label={`Abrir carrinho com ${selection.count} itens`}
           >
-            <ShoppingCart size={19} />
-            Ver carrinho ({selection.count})
+            <ShoppingCart size={22} />
+            <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-ink text-[0.6rem] font-bold text-gold ring-2 ring-gold">
+              {selection.count}
+            </span>
           </motion.button>
         )}
       </AnimatePresence>

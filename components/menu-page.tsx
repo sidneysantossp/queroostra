@@ -550,7 +550,7 @@ export function MenuPage() {
             Experiências e acompanhamentos
           </p>
           <h1 className="mt-5 max-w-4xl font-display text-[3.25rem] font-semibold leading-[0.9] text-pearl sm:text-6xl md:text-8xl">
-            Cardápio Quero Ostra - Experiências Premium
+            Cardápio
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-8 text-white/60 md:text-lg">
             Escolha suas ostras e encontre bebidas para acompanhar cada momento, dos
