@@ -147,7 +147,7 @@ export function HomePage() {
     [liveProductMap],
   );
   const [siteContent, setSiteContent] = useState({
-    title: "Experiências que despertam o paladar",
+    title: "Experiência que desperta o paladar",
     subtitle:
       "Ostras selecionadas sob demanda e entregues com data e hora programada em sua casa ou evento para transformar momentos especiais em experiências memoráveis.",
     institutional:
@@ -510,14 +510,14 @@ export function HomePage() {
 
         <div className="relative mx-auto flex w-full max-w-[1320px] items-center px-5 py-24 md:px-8 lg:py-10">
           <div className="max-w-[650px] lg:w-[43%] lg:max-w-[520px]">
-            <div className="mb-8 flex items-center justify-center lg:justify-start gap-3 text-[0.66rem] font-semibold uppercase tracking-[0.24em] text-champagne lg:mb-5 lg:text-[0.58rem]">
+            <div className="mb-8 flex items-center gap-3 text-[0.66rem] font-semibold uppercase tracking-[0.24em] text-champagne lg:mb-5 lg:text-[0.58rem]">
               <span className="h-px w-10 bg-gold lg:w-7" />
               Ostras frescas • selecionadas • entregues para você
             </div>
-            <h1 className="font-display text-[3.8rem] font-medium uppercase leading-[0.88] tracking-[-0.04em] sm:text-7xl md:text-[6.6rem] lg:text-[4.45rem] lg:leading-[0.91] text-center lg:text-left">
+            <h1 className="font-display text-[3.8rem] font-medium uppercase leading-[0.88] tracking-[-0.04em] sm:text-7xl md:text-[6.6rem] lg:text-[4.45rem] lg:leading-[0.91]">
               {siteContent.title}
             </h1>
-            <p className="mt-8 max-w-xl text-base font-light leading-7 text-white/75 md:text-lg md:leading-8 lg:mt-5 lg:max-w-[420px] lg:text-sm lg:leading-6 text-center lg:text-left mx-auto lg:mx-0">
+            <p className="mt-8 max-w-xl text-base font-light leading-7 text-white/75 md:text-lg md:leading-8 lg:mt-5 lg:max-w-[420px] lg:text-sm lg:leading-6">
               {siteContent.subtitle}
             </p>
 
@@ -544,7 +544,7 @@ export function HomePage() {
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row lg:mt-6">
               <button onClick={() => scrollTo("kits")} className="gold-button">
-                Escolher minha porção <ArrowRight size={17} />
+                Fazer minha reserva <ArrowRight size={17} />
               </button>
               <button onClick={() => scrollTo("como-funciona")} className="outline-button lg:hidden">
                 Como funciona <ChevronDown size={17} />
@@ -1063,7 +1063,7 @@ export function HomePage() {
 
       <a
         href={whatsappUrl}
-        className="fixed bottom-20 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
+        className="fixed bottom-28 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
         aria-label="Conversar no WhatsApp"
       >
         <MessageCircle size={23} />
