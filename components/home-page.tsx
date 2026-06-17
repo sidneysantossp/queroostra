@@ -514,8 +514,8 @@ export function HomePage() {
               <span className="h-px w-10 bg-gold lg:w-7" />
               Ostras frescas • selecionadas • entregues para você
             </div>
-            <h1 className="font-display text-[3.8rem] font-medium uppercase leading-[0.88] tracking-[-0.04em] sm:text-7xl md:text-[6.6rem] lg:text-[4.45rem] lg:leading-[0.91]">
-              {siteContent.title}
+            <h1 className="font-display text-[3.2rem] font-medium uppercase leading-[0.88] tracking-[-0.04em] sm:text-7xl md:text-[6.6rem] lg:text-[4.45rem] lg:leading-[0.91]">
+              Experiência<br />que desperta<br />o paladar
             </h1>
             <p className="mt-8 max-w-xl text-base font-light leading-7 text-white/75 md:text-lg md:leading-8 lg:mt-5 lg:max-w-[420px] lg:text-sm lg:leading-6">
               {siteContent.subtitle}
