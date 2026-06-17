@@ -354,6 +354,140 @@ export function MenuPage() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-pearl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Cardápio Quero Ostra - Ostras Premium e Bebidas",
+            "description": "Menu completo de experiências com ostras selecionadas (frescas e gratinadas) e carta de vinhos para harmonização na Zona Sul de São Paulo.",
+            "url": "https://queroostra.com.br/cardapio",
+            "numberOfItems": 7,
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "item": {
+                  "@type": "Product",
+                  "name": "Experiência Brasa Gourmet",
+                  "description": "Ostras gratinadas acompanhadas de limões selecionados, molho especial da casa, com gelo e sal.",
+                  "image": "https://queroostra.com.br/images/ostra-gratinada.png",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "149.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "item": {
+                  "@type": "Product",
+                  "name": "Experiência Degustação",
+                  "description": "Ostras baby acompanhadas de limões selecionados, molho especial da casa, com gelo e sal.",
+                  "image": "https://queroostra.com.br/images/kit-degustacao.png",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "69.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "item": {
+                  "@type": "Product",
+                  "name": "Experiência Happy Hour",
+                  "description": "Ostras tradicionais acompanhadas de limões selecionados, molho especial da casa, com gelo e sal.",
+                  "image": "https://queroostra.com.br/images/kit-happy-hour.png",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "79.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "item": {
+                  "@type": "Product",
+                  "name": "Experiência Momentos",
+                  "description": "Ostras grandes acompanhadas de limões selecionados, molho especial da casa, com gelo e sal.",
+                  "image": "https://queroostra.com.br/images/kit-premium.png",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "129.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "item": {
+                  "@type": "Product",
+                  "name": "Vinho Branco Sauvignon Blanc",
+                  "description": "Vinho branco selecionado ideal para harmonização com ostras frescas e experiências de frutos do mar.",
+                  "image": "https://queroostra.com.br",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "89.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "item": {
+                  "@type": "Product",
+                  "name": "Cerveja Heineken Long Neck",
+                  "description": "Cerveja Heineken gelada para acompanhamento de porções.",
+                  "image": "https://queroostra.com.br",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "13.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+              {
+                "@type": "ListItem",
+                "position": 7,
+                "item": {
+                  "@type": "Product",
+                  "name": "Espumante Brut Premium",
+                  "description": "Espumante ideal para celebrações e harmonização perfeita com ostras gratinadas.",
+                  "image": "https://queroostra.com.br",
+                  "brand": { "@type": "Brand", "name": "Quero Ostra" },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "119.90",
+                    "priceCurrency": "BRL",
+                    "availability": "https://schema.org/InStock",
+                  },
+                },
+              },
+            ],
+          }),
+        }}
+      />
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-ink/90 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between gap-3 px-5 md:px-8">
           <Link href="/" aria-label="Voltar para a página inicial" className="shrink-0">
@@ -416,7 +550,7 @@ export function MenuPage() {
             Experiências e acompanhamentos
           </p>
           <h1 className="mt-5 max-w-4xl font-display text-[3.25rem] font-semibold leading-[0.9] text-pearl sm:text-6xl md:text-8xl">
-            Cardápio
+            Cardápio Quero Ostra - Experiências Premium
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-8 text-white/60 md:text-lg">
             Escolha suas ostras e encontre bebidas para acompanhar cada momento, dos

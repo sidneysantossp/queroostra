@@ -73,25 +73,51 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "LocalBusiness",
+              "@type": "FoodEstablishment",
               name: "Quero Ostra",
+              image: "https://queroostra.com.br/images/hero-oysters.png",
+              "@id": "https://queroostra.com.br",
+              url: "https://queroostra.com.br",
+              telephone: "+5511999999999",
+              priceRange: "$$",
               description:
                 "Ostras frescas selecionadas com entrega programada na Zona Sul de São Paulo.",
-              url: "https://queroostra.com.br",
-              image: "https://queroostra.com.br/images/hero-oysters.png",
-              telephone: "+5511999999999",
               address: {
                 "@type": "PostalAddress",
                 addressLocality: "São Paulo",
                 addressRegion: "SP",
                 addressCountry: "BR",
               },
-              areaServed: {
-                "@type": "Place",
-                name: "Zona Sul de São Paulo",
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: "-23.6664",
+                longitude: "-46.6534",
               },
-              priceRange: "$$",
+              areaServed: [
+                {
+                  "@type": "AdministrativeArea",
+                  name: "Zona Sul de São Paulo",
+                },
+                {
+                  "@type": "PostalAddress",
+                  addressLocality: "Americanópolis",
+                },
+              ],
               sameAs: ["https://instagram.com/queroostra"],
+              potentialAction: {
+                "@type": "OrderAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: "https://queroostra.com.br/cardapio",
+                  inLanguage: "pt-BR",
+                  actionPlatform: [
+                    "http://schema.org/DesktopWebPlatform",
+                    "http://schema.org/MobileWebPlatform",
+                  ],
+                },
+                deliveryMethod: ["http://purl.org/goodrelations/v1#DeliveryModeOwnFleet"],
+                description: "Entrega programada. Reserve até as 18h do dia anterior.",
+              },
             }),
           }}
         />
