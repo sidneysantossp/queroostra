@@ -147,9 +147,9 @@ export function HomePage() {
     [liveProductMap],
   );
   const [siteContent, setSiteContent] = useState({
-    title: "O mar mais perto de você",
+    title: "Experiências que despertam o paladar",
     subtitle:
-      "Ostras frescas selecionadas e entregues na sua casa com data programada, na Zona Sul de São Paulo.",
+      "Ostras selecionadas sob demanda e entregues com data e hora programada em sua casa ou evento para transformar momentos especiais em experiências memoráveis.",
     institutional:
       "Cada pedido é planejado sob demanda para preservar frescor, qualidade e uma apresentação especial.",
     heroImage: "/images/hero-oysters.png",
@@ -523,7 +523,7 @@ export function HomePage() {
 
             <div className="mt-9 grid max-w-xl grid-cols-3 gap-3 border-y border-white/10 py-5 lg:mt-6 lg:max-w-[440px] lg:py-4">
               {[
-                [Sparkles, "Frescor", "Garantido"],
+                [Sparkles, "Qualidade", "Garantida"],
                 [CalendarDays, "Entrega", "Programada"],
                 [ShieldCheck, "Compra", "100% segura"],
               ].map(([Icon, title, copy]) => {
