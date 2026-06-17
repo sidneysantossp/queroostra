@@ -586,7 +586,7 @@ export function MenuPage() {
               return (
                 <article
                   key={product.id}
-                  className={`product-card group h-full ${product.tag ? "featured-card" : ""}`}
+                  className={`product-card group flex h-full flex-col ${product.tag ? "featured-card" : ""}`}
                 >
                   {product.tag && (
                     <span className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-gradient px-5 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink shadow-lg">
@@ -604,7 +604,7 @@ export function MenuPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#090909] via-transparent to-transparent" />
                   </div>
-                  <div className="p-4 sm:p-5 lg:p-7 xl:p-9">
+                  <div className="flex flex-1 flex-col p-4 sm:p-5 lg:p-7 xl:p-9">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-gold">
                       Tipo de experiência
                     </p>
@@ -619,7 +619,7 @@ export function MenuPage() {
                       ))}
                     </ul>
 
-                    <div className="mt-5 flex flex-col gap-4 lg:mt-7 xl:flex-row xl:items-end xl:justify-between flex-1 justify-end">
+                    <div className="mt-auto flex flex-col gap-4 pt-5 lg:pt-7 xl:flex-row xl:items-end xl:justify-between">
                       <div>
                         <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
                           {quantity > 0 ? `${quantity} ${quantity === 1 ? "porção" : "porções"}` : "Por porção"}
@@ -687,7 +687,7 @@ export function MenuPage() {
                       return (
                         <article
                           key={product.id}
-                          className="overflow-hidden rounded-2xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
+                          className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
                         >
                           {product.image && (
                             <div className="relative aspect-[4/5] overflow-hidden border-b border-white/10 bg-[#050505]">
@@ -701,7 +701,7 @@ export function MenuPage() {
                               />
                             </div>
                           )}
-                          <div className="p-4 lg:p-6">
+                          <div className="flex flex-1 flex-col p-4 lg:p-6">
                             <div className="flex items-start justify-between gap-4">
                               <div>
                                 <h3 className="font-display text-xl leading-tight text-pearl lg:text-2xl">{product.name}</h3>
@@ -712,7 +712,7 @@ export function MenuPage() {
                               <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
                             </div>
 
-                            <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-5 xl:mt-7 xl:flex-row xl:items-end xl:gap-5 xl:pt-6 flex-1">
+                            <div className="mt-auto flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-5 xl:flex-row xl:items-end xl:gap-5 xl:pt-6">
                               <div>
                                 <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
                                   {quantity > 0 ? "Subtotal" : "Unidade"}
