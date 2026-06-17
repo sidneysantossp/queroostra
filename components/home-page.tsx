@@ -476,13 +476,22 @@ export function HomePage() {
             ))}
           </nav>
 
-          <Link
-            href="/cardapio"
-            className="hidden items-center gap-2 rounded-full border border-gold/70 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-champagne transition hover:bg-gold hover:text-ink lg:flex"
-          >
-            <CalendarDays size={15} />
-            Fazer reserva
-          </Link>
+          <div className="hidden items-center gap-3 lg:flex">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink transition hover:bg-champagne"
+            >
+              <User size={15} />
+              Minha Conta
+            </Link>
+            <Link
+              href="/cardapio"
+              className="inline-flex items-center gap-2 rounded-full border border-gold/70 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-champagne transition hover:bg-gold hover:text-ink"
+            >
+              <CalendarDays size={15} />
+              Fazer reserva
+            </Link>
+          </div>
 
           <button
             className="grid size-11 place-items-center rounded-full lg:hidden"

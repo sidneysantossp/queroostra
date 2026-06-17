@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   Trash2,
+  User,
   Wine,
   X,
   type LucideIcon,
@@ -521,9 +522,25 @@ export function MenuPage() {
             ))}
           </nav>
 
+          <div className="hidden items-center gap-3 lg:flex">
+            <Link
+              href="/dashboard"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gold px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink transition hover:bg-champagne"
+            >
+              <User size={15} />
+              Minha Conta
+            </Link>
+            <Link
+              href="/#kits"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/70 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-champagne transition hover:bg-gold hover:text-ink"
+            >
+              Fazer reserva
+              <ArrowRight size={15} />
+            </Link>
+          </div>
           <Link
             href="/#kits"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/70 px-3 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-champagne transition hover:bg-gold hover:text-ink sm:px-4 md:px-5 md:text-[0.68rem]"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-gold/70 px-3 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-champagne transition hover:bg-gold hover:text-ink sm:px-4 md:px-5 md:text-[0.68rem] lg:hidden"
           >
             <span className="sm:hidden">Reserva</span>
             <span className="hidden sm:inline">Fazer reserva</span>
