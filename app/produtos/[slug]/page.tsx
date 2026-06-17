@@ -15,6 +15,12 @@ const money = new Intl.NumberFormat("pt-BR", {
 
 export const dynamic = "force-dynamic";
 
+const categoryLabels: Record<string, string> = {
+  fresh: "Ostras Frescas",
+  gratinated: "Ostras Gratinadas",
+  beverage: "Bebidas para Harmonização",
+};
+
 async function getProductBySlug(slug: string): Promise<ProductRecord | undefined> {
   const admin = createAdminClient();
   if (!admin) return products.find((product) => product.slug === slug);
@@ -25,6 +31,20 @@ async function getProductBySlug(slug: string): Promise<ProductRecord | undefined
     .eq("active", true)
     .maybeSingle();
   if (!data) return products.find((product) => product.slug === slug);
+
+  const primaryImage = data.product_images?.find(
+    (image: { is_primary: boolean }) => image.is_primary,
+  );
+  let imageUrl: string | undefined;
+  if (primaryImage?.storage_path) {
+    if (primaryImage.storage_path.startsWith("http")) {
+      imageUrl = primaryImage.storage_path;
+    } else {
+      const { data: urlData } = admin.storage.from("products").getPublicUrl(primaryImage.storage_path);
+      imageUrl = urlData.publicUrl;
+    }
+  }
+
   return {
     id: data.external_key ?? data.id,
     externalKey: data.external_key ?? undefined,
@@ -40,9 +60,7 @@ async function getProductBySlug(slug: string): Promise<ProductRecord | undefined
     stock: data.stock,
     active: data.active,
     featured: data.featured,
-    image: data.product_images?.find(
-      (image: { is_primary: boolean }) => image.is_primary,
-    )?.storage_path,
+    image: imageUrl,
     includedItems: data.included_items ?? [],
     preparationHours: data.preparation_hours,
     approximateVolume: data.approximate_volume ?? undefined,
@@ -58,9 +76,39 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return {};
+
+  const category = categoryLabels[product.type] ?? "Acompanhamentos";
+  const title = `${product.name} - ${category} | Quero Ostra SP`;
+  const description =
+    product.fullDescription ||
+    product.shortDescription ||
+    `${product.name} ${category} com entrega programada na Zona Sul de São Paulo.`;
+  const imageUrl = product.image ?? "https://queroostra.com.br/images/hero-oysters.png";
+
   return {
-    title: `${product.name} | Quero Ostra`,
-    description: product.shortDescription,
+    title,
+    description,
+    openGraph: {
+      siteName: "Quero Ostra",
+      type: "website",
+      url: `https://queroostra.com.br/produtos/${product.slug}`,
+      title,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${product.name} - Quero Ostra`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
@@ -73,8 +121,51 @@ export default async function ProductDetailPage({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
+  const category = categoryLabels[product.type] ?? "Acompanhamentos";
+  const imageUrl = product.image ?? "/images/hero-oysters.png";
+  const absoluteImageUrl = imageUrl.startsWith("http")
+    ? imageUrl
+    : `https://queroostra.com.br${imageUrl}`;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.fullDescription || product.shortDescription,
+    image: [absoluteImageUrl],
+    brand: { "@type": "Brand", name: "Quero Ostra" },
+    category,
+    offers: {
+      "@type": "Offer",
+      url: `https://queroostra.com.br/produtos/${product.slug}`,
+      priceCurrency: "BRL",
+      price: (product.promotionalPrice ?? product.price).toFixed(2),
+      itemCondition: "https://schema.org/NewCondition",
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressRegion: "SP",
+          addressLocality: "São Paulo",
+        },
+      },
+      seller: {
+        "@type": "Organization",
+        name: "Quero Ostra",
+      },
+    },
+  };
+
   return (
     <main className="min-h-screen bg-ink text-pearl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <header className="border-b border-white/10">
         <div className="mx-auto flex h-20 max-w-[1280px] items-center justify-between px-5 md:px-8">
           <Link href="/"><OysterLogo /></Link>
@@ -87,11 +178,11 @@ export default async function ProductDetailPage({
       <section className="mx-auto grid max-w-[1280px] gap-8 px-5 py-12 md:px-8 lg:grid-cols-2 lg:py-20">
         <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-gold/20 lg:min-h-[650px]">
           <Image
-            src={product.image ?? "/images/hero-oysters.png"}
+            src={imageUrl}
             alt={product.name}
             fill
             priority
-            unoptimized={Boolean(product.image?.startsWith("http"))}
+            unoptimized={imageUrl.startsWith("http")}
             className={product.type === "beverage" ? "object-contain p-6" : "object-cover"}
             sizes="(max-width: 1023px) 100vw, 50vw"
           />
@@ -100,11 +191,7 @@ export default async function ProductDetailPage({
 
         <div className="flex flex-col justify-center lg:pl-8">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gold">
-            {product.type === "fresh"
-              ? "Ostras frescas"
-              : product.type === "gratinated"
-                ? "Ostras gratinadas"
-                : "Harmonização"}
+            {category}
           </p>
           <h1 className="mt-4 font-display text-5xl leading-none md:text-7xl">{product.name}</h1>
           <p className="mt-6 text-base leading-8 text-white/55">{product.fullDescription}</p>
