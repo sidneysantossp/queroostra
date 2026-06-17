@@ -12,6 +12,7 @@ import {
   FileText,
   Filter,
   ImageIcon,
+  MessageCircle,
   MapPin,
   Package,
   PackageCheck,
@@ -578,6 +579,13 @@ export function AdminPaymentsPage() {
 }
 
 export function AdminSettingsPage() {
+  /* ── General settings ── */
+  const [whatsappSupport, setWhatsappSupport] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [generalSaved, setGeneralSaved] = useState(false);
+  const [generalError, setGeneralError] = useState("");
+
+  /* ── Payment settings ── */
   const [environment, setEnvironment] = useState<"sandbox" | "production">("sandbox");
   const [apiKey, setApiKey] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
@@ -596,26 +604,35 @@ export function AdminSettingsPage() {
     setWebhookUrl(`${window.location.origin}/api/webhooks/asaas`);
     if (!supabaseConfigured) return;
     const load = async () => {
-      const response = await fetch("/api/admin/settings/asaas", { cache: "no-store" });
-      if (!response.ok) return;
-      const data = (await response.json()) as {
-        environment: "sandbox" | "production";
-        pixEnabled: boolean;
-        cardEnabled: boolean;
-        installments: number;
-        pixExpirationHours: number;
-        apiKeyConfigured: boolean;
-        webhookSecretConfigured: boolean;
-        persistenceConfigured: boolean;
-      };
-      setEnvironment(data.environment);
-      setPixEnabled(data.pixEnabled);
-      setCardEnabled(data.cardEnabled);
-      setInstallments(data.installments);
-      setPixExpirationHours(data.pixExpirationHours);
-      setApiKeyConfigured(data.apiKeyConfigured);
-      setWebhookSecretConfigured(data.webhookSecretConfigured);
-      setPersistenceConfigured(data.persistenceConfigured);
+      const [asaasRes, generalRes] = await Promise.all([
+        fetch("/api/admin/settings/asaas", { cache: "no-store" }),
+        fetch("/api/admin/settings/general", { cache: "no-store" }),
+      ]);
+      if (asaasRes.ok) {
+        const data = (await asaasRes.json()) as {
+          environment: "sandbox" | "production";
+          pixEnabled: boolean;
+          cardEnabled: boolean;
+          installments: number;
+          pixExpirationHours: number;
+          apiKeyConfigured: boolean;
+          webhookSecretConfigured: boolean;
+          persistenceConfigured: boolean;
+        };
+        setEnvironment(data.environment);
+        setPixEnabled(data.pixEnabled);
+        setCardEnabled(data.cardEnabled);
+        setInstallments(data.installments);
+        setPixExpirationHours(data.pixExpirationHours);
+        setApiKeyConfigured(data.apiKeyConfigured);
+        setWebhookSecretConfigured(data.webhookSecretConfigured);
+        setPersistenceConfigured(data.persistenceConfigured);
+      }
+      if (generalRes.ok) {
+        const gData = (await generalRes.json()) as { whatsappSupport: string; instagramUrl: string };
+        setWhatsappSupport(gData.whatsappSupport);
+        setInstagramUrl(gData.instagramUrl);
+      }
     };
     void load();
   }, []);
@@ -648,13 +665,52 @@ export function AdminSettingsPage() {
     setWebhookSecret("");
   }
 
+  async function saveGeneral() {
+    setGeneralSaved(false);
+    setGeneralError("");
+    const response = await fetch("/api/admin/settings/general", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ whatsappSupport, instagramUrl }),
+    });
+    const data = (await response.json()) as { saved?: boolean; error?: string };
+    if (!response.ok || !data.saved) {
+      setGeneralError(data.error ?? "Não foi possível salvar.");
+      return;
+    }
+    setGeneralSaved(true);
+  }
+
   return (
     <AdminShell>
       <AdminHeading
-        eyebrow="Integrações"
-        title="Configurações de pagamento"
-        description="Credenciais criptografadas no servidor e nunca devolvidas ao navegador."
+        eyebrow="Geral"
+        title="Configurações do site"
+        description="WhatsApp de suporte, redes sociais e configurações de pagamento."
       />
+
+      {/* ── General Settings ── */}
+      <section className="admin-panel mt-7">
+        <h2 className="admin-panel-title"><MessageCircle size={20} /> Contato e redes sociais</h2>
+        <p className="mt-2 text-xs text-white/35">Este número será exibido no botão de WhatsApp do site, dashboard do cliente e botão flutuante.</p>
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <label className="field-label">
+            WhatsApp de suporte
+            <input value={whatsappSupport} onChange={(event) => setWhatsappSupport(event.target.value)} className="field" inputMode="tel" placeholder="5511999999999" />
+          </label>
+          <label className="field-label">
+            URL do Instagram
+            <input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} className="field" placeholder="https://instagram.com/queroostra" />
+          </label>
+        </div>
+        <button onClick={saveGeneral} className="gold-button mt-5"><Save size={16} /> Salvar contato</button>
+        {generalSaved && <p className="mt-3 text-sm text-emerald-200">Configurações de contato salvas.</p>}
+        {generalError && <p className="mt-3 text-sm text-red-200">{generalError}</p>}
+      </section>
+
+      {/* ── Payment Settings ── */}
+      <h2 className="mt-10 font-display text-2xl text-pearl">Configurações de pagamento</h2>
+      <p className="mt-1 text-sm text-white/35">Credenciais criptografadas no servidor e nunca devolvidas ao navegador.</p>
       <div className="mt-7 grid gap-6 xl:grid-cols-[1fr_360px]">
         <section className="admin-panel">
           <div className="grid gap-5 md:grid-cols-2">

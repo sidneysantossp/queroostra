@@ -193,6 +193,12 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
   const { orders, loading } = useOrders();
   const order = orders.find((item) => item.id === orderId) ?? (orderId === sampleOrder.id ? sampleOrder : undefined);
   const [copied, setCopied] = useState(false);
+  const [whatsappSupport, setWhatsappSupport] = useState("");
+  useEffect(() => {
+    fetch("/api/content/settings").then((r) => r.json()).then((d: { whatsappSupport?: string }) => {
+      if (d.whatsappSupport) setWhatsappSupport(d.whatsappSupport.replace(/\D/g, ""));
+    }).catch(() => {});
+  }, []);
   const timeline = [
     ["Pedido criado", true],
     ["Pagamento confirmado", order?.paymentStatus === "confirmed"],
@@ -332,7 +338,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
             </div>
           </section>
 
-          <a href="https://wa.me/5511999999999" className="outline-button w-full justify-center"><MessageCircle size={17} /> Falar no WhatsApp</a>
+          <a href={whatsappSupport ? `https://wa.me/${whatsappSupport}` : "#"} target="_blank" rel="noopener noreferrer" className="outline-button w-full justify-center"><MessageCircle size={17} /> Falar no WhatsApp</a>
         </aside>
       </div>
     </DashboardShell>

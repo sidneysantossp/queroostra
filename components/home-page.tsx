@@ -163,9 +163,11 @@ export function HomePage() {
   const [carouselPaused, setCarouselPaused] = useState(false);
   const [cepResult, setCepResult] = useState<"idle" | "checking" | "covered" | "contact">("idle");
   const maxSlide = Math.max(0, kits.length - slidesPerView);
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "");
-  const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}` : "#kits";
-  const instagramUrl = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "#";
+  const [whatsappUrl, setWhatsappUrl] = useState(() => {
+    const envNum = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "");
+    return envNum ? `https://wa.me/${envNum}` : "#kits";
+  });
+  const [instagramUrl, setInstagramUrl] = useState(process.env.NEXT_PUBLIC_INSTAGRAM_URL || "#");
 
   // Cart implementation
   const [cartQuantities, setCartQuantities] = useState<Record<string, number>>({});
@@ -207,6 +209,19 @@ export function HomePage() {
       active = false;
     };
   }, [router]);
+
+  useEffect(() => {
+    fetch("/api/content/settings")
+      .then((r) => r.json())
+      .then((d: { whatsappSupport?: string; instagramUrl?: string }) => {
+        if (d.whatsappSupport) {
+          const num = d.whatsappSupport.replace(/\D/g, "");
+          if (num) setWhatsappUrl(`https://wa.me/${num}`);
+        }
+        if (d.instagramUrl) setInstagramUrl(d.instagramUrl);
+      })
+      .catch(() => {});
+  }, []);
 
   const displayCartProducts = useMemo<CartProduct[]>(
     () => [
