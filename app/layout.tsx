@@ -61,11 +61,55 @@ export default function RootLayout({
           name="google-site-verification"
           content="CU-BjqNCEUFVmWz-0y-ssyaygtEdGn2IyNdfBFgPlZ8"
         />
+        <meta name="theme-color" content="#090909" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "LocalBusiness",
+              name: "Quero Ostra",
+              description:
+                "Ostras frescas selecionadas com entrega programada na Zona Sul de São Paulo.",
+              url: "https://queroostra.com.br",
+              image: "https://queroostra.com.br/images/hero-oysters.png",
+              telephone: "+5511999999999",
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "São Paulo",
+                addressRegion: "SP",
+                addressCountry: "BR",
+              },
+              areaServed: {
+                "@type": "Place",
+                name: "Zona Sul de São Paulo",
+              },
+              priceRange: "$$",
+              sameAs: ["https://instagram.com/queroostra"],
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Quero Ostra",
+              url: "https://queroostra.com.br",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://queroostra.com.br/produtos?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
         />
       </head>
       <body>
