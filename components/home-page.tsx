@@ -453,57 +453,57 @@ export function HomePage() {
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-
-        <AnimatePresence>
-          {menuOpen && (
-            <motion.nav
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-[55] flex flex-col items-center justify-center bg-ink/85 backdrop-blur-xl lg:hidden"
-            >
-              <button
-                onClick={() => setMenuOpen(false)}
-                className="absolute right-5 top-6 grid size-11 place-items-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/5"
-                aria-label="Fechar menu"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="flex flex-col items-center gap-6">
-                <Link
-                  href="/cardapio"
-                  onClick={() => setMenuOpen(false)}
-                  className="font-display text-2xl uppercase tracking-[0.12em] text-pearl transition hover:text-gold"
-                >
-                  Cardápio
-                </Link>
-                {[
-                  ["Nossas porções", "kits"],
-                  ["Como funciona", "como-funciona"],
-                  ["Por que escolher", "experiencia"],
-                  ["Área de entrega", "entrega"],
-                ].map(([label, id]) => (
-                  <button
-                    key={id}
-                    onClick={() => scrollTo(id)}
-                    className="font-display text-2xl uppercase tracking-[0.12em] text-pearl transition hover:text-gold"
-                  >
-                    {label}
-                  </button>
-                ))}
-                <button
-                  onClick={() => scrollTo("kits")}
-                  className="mt-4 rounded-full bg-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-champagne"
-                >
-                  Fazer minha reserva
-                </button>
-              </div>
-            </motion.nav>
-          )}
-        </AnimatePresence>
       </header>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.nav
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[55] flex flex-col items-center justify-center bg-ink/90 backdrop-blur-2xl lg:hidden"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute right-5 top-6 grid size-11 place-items-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/5"
+              aria-label="Fechar menu"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex flex-col items-center gap-7">
+              <Link
+                href="/cardapio"
+                onClick={() => setMenuOpen(false)}
+                className="font-display text-3xl uppercase tracking-[0.12em] text-pearl transition hover:text-gold"
+              >
+                Cardápio
+              </Link>
+              {[
+                ["Nossas porções", "kits"],
+                ["Como funciona", "como-funciona"],
+                ["Por que escolher", "experiencia"],
+                ["Área de entrega", "entrega"],
+              ].map(([label, id]) => (
+                <button
+                  key={id}
+                  onClick={() => scrollTo(id)}
+                  className="font-display text-3xl uppercase tracking-[0.12em] text-pearl transition hover:text-gold"
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                onClick={() => scrollTo("kits")}
+                className="mt-6 rounded-full bg-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-champagne"
+              >
+                Fazer minha reserva
+              </button>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
 
       <section
         id="inicio"
@@ -1078,7 +1078,7 @@ export function HomePage() {
 
       <a
         href={whatsappUrl}
-        className="fixed bottom-24 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
+        className="fixed bottom-20 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
         aria-label="Conversar no WhatsApp"
       >
         <MessageCircle size={23} />
