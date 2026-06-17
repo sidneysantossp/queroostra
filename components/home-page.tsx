@@ -457,34 +457,49 @@ export function HomePage() {
         <AnimatePresence>
           {menuOpen && (
             <motion.nav
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border-t border-white/10 bg-charcoal px-5 py-5 lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-[55] flex flex-col items-center justify-center bg-ink/85 backdrop-blur-xl lg:hidden"
             >
-              <Link
-                href="/cardapio"
-                className="flex w-full items-center justify-between border-b border-white/10 py-4 text-left text-sm uppercase tracking-[0.12em] text-white/75"
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="absolute right-5 top-6 grid size-11 place-items-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/5"
+                aria-label="Fechar menu"
               >
-                Cardápio
-                <ChevronRight size={16} className="text-gold" />
-              </Link>
-              {[
-                ["Nossas porções", "kits"],
-                ["Como funciona", "como-funciona"],
-                ["Por que escolher", "experiencia"],
-                ["Área de entrega", "entrega"],
-                ["Fazer reserva", "kits"],
-              ].map(([label, id]) => (
-                <button
-                  key={id}
-                  onClick={() => scrollTo(id)}
-                  className="flex w-full items-center justify-between border-b border-white/10 py-4 text-left text-sm uppercase tracking-[0.12em] text-white/75"
+                <X size={20} />
+              </button>
+
+              <div className="flex flex-col items-center gap-6">
+                <Link
+                  href="/cardapio"
+                  onClick={() => setMenuOpen(false)}
+                  className="font-display text-2xl uppercase tracking-[0.12em] text-pearl transition hover:text-gold"
                 >
-                  {label}
-                  <ChevronRight size={16} className="text-gold" />
+                  Cardápio
+                </Link>
+                {[
+                  ["Nossas porções", "kits"],
+                  ["Como funciona", "como-funciona"],
+                  ["Por que escolher", "experiencia"],
+                  ["Área de entrega", "entrega"],
+                ].map(([label, id]) => (
+                  <button
+                    key={id}
+                    onClick={() => scrollTo(id)}
+                    className="font-display text-2xl uppercase tracking-[0.12em] text-pearl transition hover:text-gold"
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => scrollTo("kits")}
+                  className="mt-4 rounded-full bg-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-ink transition hover:bg-champagne"
+                >
+                  Fazer minha reserva
                 </button>
-              ))}
+              </div>
             </motion.nav>
           )}
         </AnimatePresence>
@@ -1063,7 +1078,7 @@ export function HomePage() {
 
       <a
         href={whatsappUrl}
-        className="fixed bottom-28 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
+        className="fixed bottom-24 right-5 z-40 grid size-14 place-items-center rounded-full bg-gold text-ink shadow-[0_12px_40px_rgba(212,175,55,.28)] transition hover:scale-105 lg:bottom-5"
         aria-label="Conversar no WhatsApp"
       >
         <MessageCircle size={23} />
