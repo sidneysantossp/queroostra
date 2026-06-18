@@ -34,6 +34,7 @@ import {
   Star,
   Trash2,
   Truck,
+  User,
   UtensilsCrossed,
   Wine,
   X,
