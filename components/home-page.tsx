@@ -16,6 +16,7 @@ import {
   Clock3,
   CreditCard,
   CupSoda,
+  Facebook,
   Gem,
   GlassWater,
   Instagram,
@@ -465,7 +466,6 @@ export function HomePage() {
               ["Como funciona", "como-funciona"],
               ["Experiência", "experiencia"],
               ["Entrega", "entrega"],
-              ["Perguntas", "faq"],
             ].map(([label, id]) => (
               <button
                 key={id}
@@ -1077,14 +1077,27 @@ export function HomePage() {
           <div>
             <OysterLogo />
             <p className="mt-5 max-w-xs text-xs leading-6 text-white/40">
-              Ostras frescas selecionadas para experiências especiais na Zona Sul de São Paulo.
+              Ostras selecionadas sob demanda e entregues com data e hora programada em sua casa ou evento para
+              transformar momentos especiais em experiências memoráveis.
             </p>
             <div className="mt-6 flex gap-3">
-              {[Instagram, MessageCircle, Mail].map((Icon, index) => (
+              {[
+                { Icon: Instagram, href: instagramUrl, label: "Instagram", external: true },
+                {
+                  Icon: Facebook,
+                  href: "https://facebook.com/queroostraoficial",
+                  label: "Facebook",
+                  external: true,
+                },
+                { Icon: MessageCircle, href: whatsappUrl, label: "WhatsApp", external: true },
+                { Icon: Mail, href: "mailto:contato@queroostra.com.br", label: "E-mail", external: false },
+              ].map(({ Icon, href, label, external }) => (
                 <a
-                  key={index}
-                  href={index === 0 ? instagramUrl : index === 1 ? whatsappUrl : "mailto:contato@queroostra.com.br"}
-                  aria-label={index === 0 ? "Instagram" : index === 1 ? "WhatsApp" : "E-mail"}
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noreferrer" : undefined}
                   className="grid size-10 place-items-center rounded-full border border-white/10 text-white/55 transition hover:border-gold hover:text-gold"
                 >
                   <Icon size={17} />
