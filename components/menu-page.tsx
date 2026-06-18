@@ -123,7 +123,9 @@ function MenuCarousel({
           style={
             {
               transform:
-                slidesPerView === 4
+                slidesPerView === 5
+                  ? `translate3d(calc(-${activeSlide * 20}% - ${activeSlide * 0.15}rem), 0, 0)`
+                  : slidesPerView === 4
                   ? `translate3d(calc(-${activeSlide * (100 / 4)}% - ${activeSlide * 0.3333}rem), 0, 0)`
                   : slidesPerView === 3
                   ? `translate3d(calc(-${activeSlide * (100 / 3)}% - ${activeSlide * 0.3333}rem), 0, 0)`
@@ -702,7 +704,7 @@ export function MenuPage() {
                     </div>
                   </div>
 
-                  <MenuCarousel label={category.name} trackClassName="menu-carousel-track-compact" desktopSlidesPerView={4}>
+                  <MenuCarousel label={category.name} trackClassName="menu-carousel-track-compact" desktopSlidesPerView={5}>
                     {category.products.map((product) => {
                       const quantity = quantities[product.id] ?? 0;
                       const subtotal = product.price * quantity;
@@ -710,37 +712,37 @@ export function MenuPage() {
                       return (
                         <article
                           key={product.id}
-                          className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
+                          className="flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#080808] transition hover:border-gold/40"
                         >
                           {product.image && (
-                            <div className="relative aspect-[4/5] overflow-hidden border-b border-white/10 bg-[#050505]">
+                            <div className="relative aspect-square overflow-hidden border-b border-white/10 bg-[#050505] lg:aspect-[4/3]">
                               <Image
                                 src={product.image}
                                 alt={product.name}
                                 fill
                                 unoptimized={product.image.startsWith("http")}
-                                className="object-contain p-4 transition duration-700 hover:scale-105"
-                                sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                                className="object-contain p-3 transition duration-700 hover:scale-105 lg:p-4"
+                                sizes="(max-width: 767px) 50vw, (max-width: 1279px) 50vw, 20vw"
                               />
                             </div>
                           )}
-                          <div className="flex flex-1 flex-col p-4 lg:p-6">
+                          <div className="flex flex-1 flex-col p-4 lg:p-5">
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <h3 className="font-display text-xl leading-tight text-pearl lg:text-2xl">{product.name}</h3>
-                                <p className="mt-2 text-xs uppercase tracking-[0.12em] text-white/35">
+                                <h3 className="font-display text-xl leading-tight text-pearl lg:text-[1.35rem]">{product.name}</h3>
+                                <p className="mt-2 text-[0.68rem] uppercase tracking-[0.12em] text-white/35">
                                   {product.description}
                                 </p>
                               </div>
                               <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
                             </div>
 
-                            <div className="mt-auto flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-5 xl:flex-row xl:items-end xl:gap-5 xl:pt-6">
+                            <div className="mt-auto flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-4 xl:flex-row xl:items-end xl:gap-4">
                               <div>
                                 <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
                                   {quantity > 0 ? "Subtotal" : "Unidade"}
                                 </p>
-                                <p className="mt-1 font-display text-2xl text-champagne lg:text-3xl">
+                                <p className="mt-1 font-display text-2xl text-champagne lg:text-[1.75rem]">
                                   {money.format(quantity > 0 ? subtotal : product.price)}
                                 </p>
                               </div>
