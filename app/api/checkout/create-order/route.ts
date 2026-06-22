@@ -6,6 +6,7 @@ import {
   getPixQrCode,
   isAsaasConfigured,
 } from "@/lib/asaas";
+import { validateCoupon } from "@/lib/coupons";
 import { calculateDeliveryQuote } from "@/lib/delivery";
 import type { CreatedOrder, PaymentStatus } from "@/lib/domain";
 import { priceCart, priceCartFromDatabase } from "@/lib/pricing";
@@ -70,6 +71,8 @@ export async function POST(request: Request) {
   }
 
   let priced;
+  let couponId: string | null = null;
+  let couponUsedCount = 0;
   try {
     priced = admin
       ? await priceCartFromDatabase(
@@ -79,6 +82,25 @@ export async function POST(request: Request) {
           delivery.fee,
         )
       : priceCart(payload.cart, payload.selectedDates.length, delivery.fee);
+
+    if (payload.couponCode) {
+      if (!admin) throw new Error("Cupons temporariamente indisponíveis.");
+      const couponResult = await validateCoupon(
+        admin,
+        payload.couponCode,
+        priced.totals.itemsSubtotal,
+      );
+      if (!couponResult.valid) throw new Error(couponResult.error);
+      couponId = couponResult.coupon.id;
+      couponUsedCount = couponResult.coupon.usedCount;
+      priced = await priceCartFromDatabase(
+        admin,
+        payload.cart,
+        payload.selectedDates.length,
+        delivery.fee,
+        couponResult.discount,
+      );
+    }
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Carrinho inválido." },
@@ -322,6 +344,7 @@ export async function POST(request: Request) {
       delivery_fee: order.totals.deliveryFees,
       discount: order.totals.discount,
       total: order.totals.total,
+      coupon_id: couponId,
       delivery_window: order.deliveryWindow,
       notes: order.notes,
       idempotency_key: payload.idempotencyKey,
@@ -367,6 +390,14 @@ export async function POST(request: Request) {
         status: order.status,
         note: "Pedido criado pelo checkout.",
       }),
+      ...(couponId
+        ? [
+            admin
+              .from("coupons")
+              .update({ used_count: couponUsedCount + 1 })
+              .eq("id", couponId),
+          ]
+        : []),
     ]);
   }
 

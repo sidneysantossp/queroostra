@@ -57,6 +57,7 @@ export const checkoutSchema = z.object({
   customer: customerSchema,
   address: addressSchema,
   paymentMethod: z.enum(["PIX", "CREDIT_CARD"]),
+  couponCode: z.string().trim().max(40).optional(),
   notes: z.string().max(1000).optional(),
   reviewed: z.literal(true, { error: "Confirme a revisão do pedido" }),
   acceptedTerms: z.literal(true, { error: "Aceite os termos para continuar" }),

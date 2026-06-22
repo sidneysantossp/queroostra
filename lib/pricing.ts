@@ -3,6 +3,12 @@ import type { CheckoutCartItem, OrderTotals, PricedOrderItem } from "@/lib/domai
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const roundMoney = (value: number) => Math.round(value * 100) / 100;
+export const FREE_SHIPPING_OYSTER_UNITS = 24;
+
+function parseProductUnits(value?: string | null) {
+  const match = value?.match(/\d+/);
+  return match ? Number(match[0]) : 0;
+}
 
 export function priceCart(
   cart: CheckoutCartItem[],
@@ -48,14 +54,22 @@ export function priceCart(
 
   const singleDateSubtotal = items.reduce((total, item) => total + item.subtotal, 0);
   const itemsSubtotal = roundMoney(singleDateSubtotal * multiplier);
-  const deliveryFees = roundMoney(deliveryFeePerDate * multiplier);
+  const oysterUnits = cart.reduce((total, cartItem) => {
+    const product = getProduct(cartItem.id);
+    return product && product.type !== "beverage"
+      ? total + parseProductUnits(product.approximateVolume) * cartItem.quantity
+      : total;
+  }, 0);
+  const effectiveDeliveryFee =
+    oysterUnits >= FREE_SHIPPING_OYSTER_UNITS ? 0 : deliveryFeePerDate;
+  const deliveryFees = roundMoney(effectiveDeliveryFee * multiplier);
   const total = roundMoney(Math.max(0, itemsSubtotal + deliveryFees - discount));
 
   return {
     items,
     totals: {
       itemsSubtotal,
-      deliveryFeePerDate,
+      deliveryFeePerDate: effectiveDeliveryFee,
       deliveryFees,
       discount,
       dateMultiplier: multiplier,
@@ -81,7 +95,7 @@ export async function priceCartFromDatabase(
     await Promise.all([
       supabase
         .from("products")
-        .select("id, external_key, title, short_description, price, promotional_price, stock, active, product_images(storage_path, is_primary)")
+        .select("id, external_key, title, short_description, price, promotional_price, stock, active, product_type, approximate_volume, product_images(storage_path, is_primary)")
         .in("external_key", productKeys),
       addonKeys.length > 0
         ? supabase
@@ -141,12 +155,20 @@ export async function priceCartFromDatabase(
   const multiplier = Math.max(1, dateCount);
   const singleDateSubtotal = items.reduce((total, item) => total + item.subtotal, 0);
   const itemsSubtotal = roundMoney(singleDateSubtotal * multiplier);
-  const deliveryFees = roundMoney(deliveryFeePerDate * multiplier);
+  const oysterUnits = cart.reduce((total, cartItem) => {
+    const product = productMap.get(cartItem.id);
+    return product && product.product_type !== "beverage"
+      ? total + parseProductUnits(product.approximate_volume) * cartItem.quantity
+      : total;
+  }, 0);
+  const effectiveDeliveryFee =
+    oysterUnits >= FREE_SHIPPING_OYSTER_UNITS ? 0 : deliveryFeePerDate;
+  const deliveryFees = roundMoney(effectiveDeliveryFee * multiplier);
   return {
     items,
     totals: {
       itemsSubtotal,
-      deliveryFeePerDate,
+      deliveryFeePerDate: effectiveDeliveryFee,
       deliveryFees,
       discount,
       dateMultiplier: multiplier,

@@ -970,7 +970,7 @@ export function HomePage() {
                           <Truck size={16} /> Frete: R$&nbsp;18,00
                         </span>
                         <span className="text-xs text-white/45">
-                          Frete Grátis para compras acima de R$&nbsp;199,00
+                          Frete grátis a partir de 2 dúzias (24 ostras)
                         </span>
                       </div>
                     )}

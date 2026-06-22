@@ -34,6 +34,7 @@ import {
   QrCode,
   ShieldCheck,
   ShoppingCart,
+  TicketPercent,
   Truck,
   UserRound,
 } from "lucide-react";
@@ -109,6 +110,14 @@ export function CheckoutPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount: number;
+    label: string;
+  } | null>(null);
+  const [couponMessage, setCouponMessage] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const lastCepLookupRef = useRef("");
   const socialCustomerHandledRef = useRef(false);
@@ -322,6 +331,7 @@ export function CheckoutPage() {
         store.cart,
         Math.max(1, store.selectedDates.length),
         deliveryFee,
+        appliedCoupon?.discount ?? 0,
       );
     } catch {
       return {
@@ -336,7 +346,52 @@ export function CheckoutPage() {
         },
       };
     }
-  }, [deliveryFee, store.cart, store.selectedDates.length]);
+  }, [appliedCoupon?.discount, deliveryFee, store.cart, store.selectedDates.length]);
+
+  useEffect(() => {
+    setAppliedCoupon(null);
+    setCouponMessage("");
+  }, [store.cart, store.selectedDates.length]);
+
+  async function applyCoupon() {
+    const code = couponInput.trim().toUpperCase().replace(/\s+/g, "");
+    if (!code) {
+      setCouponMessage("Informe o código do cupom.");
+      return;
+    }
+    setCouponLoading(true);
+    setCouponMessage("");
+    const response = await fetch("/api/coupons/validate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        code,
+        cart: store.cart,
+        dateCount: Math.max(1, store.selectedDates.length),
+      }),
+    });
+    const data = (await response.json()) as {
+      coupon?: { code: string; discountType: "fixed" | "percentage"; discountValue: number };
+      discount?: number;
+      error?: string;
+    };
+    if (!response.ok || !data.coupon || data.discount === undefined) {
+      setAppliedCoupon(null);
+      setCouponMessage(data.error ?? "Não foi possível aplicar o cupom.");
+      setCouponLoading(false);
+      return;
+    }
+    setCouponInput(data.coupon.code);
+    setAppliedCoupon({
+      code: data.coupon.code,
+      discount: data.discount,
+      label: data.coupon.discountType === "percentage"
+        ? `${data.coupon.discountValue}% de desconto`
+        : `${money.format(data.coupon.discountValue)} de desconto`,
+    });
+    setCouponMessage("Cupom aplicado.");
+    setCouponLoading(false);
+  }
 
   const calendarDays = eachDayOfInterval({
     start: startOfMonth(month),
@@ -588,6 +643,7 @@ export function CheckoutPage() {
           customer: store.customer,
           address: currentAddress,
           paymentMethod: store.paymentMethod,
+          couponCode: appliedCoupon?.code,
           notes: store.notes,
           reviewed,
           acceptedTerms,
@@ -1251,6 +1307,41 @@ export function CheckoutPage() {
             </div>
           )}
 
+          <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+            <label className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+              Cupom de desconto
+            </label>
+            <div className="mt-3 flex gap-2">
+              <div className="relative min-w-0 flex-1">
+                <TicketPercent className="absolute left-3 top-1/2 -translate-y-1/2 text-gold" size={17} />
+                <input
+                  value={couponInput}
+                  onChange={(event) => {
+                    setCouponInput(event.target.value.toUpperCase().replace(/\s+/g, ""));
+                    if (appliedCoupon) setAppliedCoupon(null);
+                    setCouponMessage("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void applyCoupon();
+                    }
+                  }}
+                  className="field pl-10 uppercase"
+                  placeholder="DIGITE SEU CUPOM"
+                />
+              </div>
+              <button type="button" onClick={applyCoupon} disabled={couponLoading} className="outline-button shrink-0 px-4 disabled:opacity-50">
+                {couponLoading ? "Validando" : "Aplicar"}
+              </button>
+            </div>
+            {couponMessage && (
+              <p className={`mt-3 text-xs ${appliedCoupon ? "text-emerald-200" : "text-red-200"}`}>
+                {couponMessage}{appliedCoupon ? ` ${appliedCoupon.label}.` : ""}
+              </p>
+            )}
+          </div>
+
           <div className="mt-5 space-y-3 border-y border-white/10 py-5 text-sm">
             <div className="flex justify-between text-white/45">
               <span>Produtos {store.selectedDates.length > 1 ? `× ${store.selectedDates.length} datas` : ""}</span>
@@ -1258,8 +1349,16 @@ export function CheckoutPage() {
             </div>
             <div className="flex justify-between text-white/45">
               <span>Entrega {store.selectedDates.length > 1 ? `× ${store.selectedDates.length}` : ""}</span>
-              <span className="text-pearl">{money.format(pricing.totals.deliveryFees)}</span>
+              <span className={pricing.totals.deliveryFees === 0 ? "text-emerald-200" : "text-pearl"}>
+                {pricing.totals.deliveryFees === 0 ? "Grátis" : money.format(pricing.totals.deliveryFees)}
+              </span>
             </div>
+            {pricing.totals.discount > 0 && (
+              <div className="flex justify-between text-emerald-200">
+                <span>Desconto {appliedCoupon ? `(${appliedCoupon.code})` : ""}</span>
+                <span>- {money.format(pricing.totals.discount)}</span>
+              </div>
+            )}
             <div className="flex items-end justify-between pt-2">
               <span className="text-white/65">Total</span>
               <span className="font-display text-3xl text-champagne">{money.format(pricing.totals.total)}</span>

@@ -25,6 +25,7 @@ import {
   Trash2,
   TrendingUp,
   Truck,
+  TicketPercent,
   Users,
   WalletCards,
 } from "lucide-react";
@@ -36,6 +37,7 @@ import { addons as initialAddons, deliveryWindows, products as initialProducts }
 import { sampleOrder } from "@/lib/demo-data";
 import type { AddonRecord, ProductRecord } from "@/lib/domain";
 import type { CreatedOrder } from "@/lib/domain";
+import type { CouponRecord } from "@/lib/coupons";
 import { supabaseConfigured } from "@/lib/supabase/config";
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -436,6 +438,193 @@ export function AdminUsersPage() {
     });
   }
   return <AdminShell><AdminHeading eyebrow="Relacionamento" title="Usuários" description="Clientes, histórico de compras e permissões administrativas." /><div className="mt-7 overflow-x-auto rounded-2xl border border-white/10 bg-[#0A0A0A] p-5"><table className="admin-table min-w-[800px]"><thead><tr><th>Nome</th><th>E-mail</th><th>Pedidos</th><th>Último pedido</th><th>Role</th><th>Status</th></tr></thead><tbody>{users.map((user) => <tr key={user.id}><td className="font-semibold text-pearl">{user.full_name}</td><td>{user.email}</td><td>{user.orderCount}</td><td>{user.lastOrder ? new Date(user.lastOrder).toLocaleDateString("pt-BR") : "-"}</td><td><select value={user.role} onChange={(event) => updateRole(user, event.target.value as AdminUser["role"])} className="rounded-lg border border-white/10 bg-black px-3 py-2 text-xs"><option value="customer">cliente</option><option value="admin">admin</option></select></td><td className={user.active ? "text-emerald-200" : "text-red-200"}>{user.active ? "Ativo" : "Inativo"}</td></tr>)}</tbody></table></div></AdminShell>;
+}
+
+type CouponForm = {
+  id?: string;
+  code: string;
+  discountType: "fixed" | "percentage";
+  discountValue: number;
+  minimumOrder: number;
+  usageLimit: string;
+  startsAt: string;
+  endsAt: string;
+  active: boolean;
+};
+
+const emptyCoupon: CouponForm = {
+  code: "",
+  discountType: "percentage",
+  discountValue: 10,
+  minimumOrder: 0,
+  usageLimit: "",
+  startsAt: "",
+  endsAt: "",
+  active: true,
+};
+
+export function AdminCouponsPage() {
+  const [coupons, setCoupons] = useState<CouponRecord[]>([]);
+  const [form, setForm] = useState<CouponForm>(emptyCoupon);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  async function loadCoupons() {
+    setLoading(true);
+    const response = await fetch("/api/admin/coupons", { cache: "no-store" });
+    const data = (await response.json()) as { coupons?: CouponRecord[]; error?: string };
+    if (response.ok) setCoupons(data.coupons ?? []);
+    else setError(data.error ?? "Não foi possível carregar os cupons.");
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    void loadCoupons();
+  }, []);
+
+  function editCoupon(coupon: CouponRecord) {
+    setForm({
+      id: coupon.id,
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minimumOrder: coupon.minimumOrder,
+      usageLimit: coupon.usageLimit ? String(coupon.usageLimit) : "",
+      startsAt: coupon.startsAt ? coupon.startsAt.slice(0, 16) : "",
+      endsAt: coupon.endsAt ? coupon.endsAt.slice(0, 16) : "",
+      active: coupon.active,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function saveCoupon() {
+    setSaving(true);
+    setMessage("");
+    setError("");
+    const response = await fetch("/api/admin/coupons", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        ...form,
+        code: form.code.toUpperCase().replace(/\s+/g, ""),
+        usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
+        startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+        endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
+      }),
+    });
+    const data = (await response.json()) as { saved?: boolean; error?: string };
+    if (!response.ok || !data.saved) {
+      setError(data.error ?? "Não foi possível salvar o cupom.");
+      setSaving(false);
+      return;
+    }
+    setForm(emptyCoupon);
+    setMessage("Cupom salvo.");
+    await loadCoupons();
+    setSaving(false);
+  }
+
+  async function deleteCoupon(id: string) {
+    if (!window.confirm("Excluir este cupom?")) return;
+    const response = await fetch(`/api/admin/coupons?id=${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      setError("Não foi possível excluir o cupom.");
+      return;
+    }
+    await loadCoupons();
+  }
+
+  return (
+    <AdminShell>
+      <AdminHeading
+        eyebrow="Promoções"
+        title="Cupons de desconto"
+        description="Crie códigos promocionais com validade, pedido mínimo e limite de utilizações."
+      />
+
+      <section className="admin-panel mt-7">
+        <h2 className="admin-panel-title"><TicketPercent size={20} /> {form.id ? "Editar cupom" : "Novo cupom"}</h2>
+        <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <label className="field-label">
+            Código
+            <input
+              value={form.code}
+              onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase().replace(/\s+/g, "") })}
+              className="field uppercase"
+              placeholder="BEMVINDO10"
+            />
+          </label>
+          <label className="field-label">
+            Tipo de desconto
+            <select
+              value={form.discountType}
+              onChange={(event) => setForm({ ...form, discountType: event.target.value as "fixed" | "percentage" })}
+              className="field"
+            >
+              <option value="percentage">Percentual (%)</option>
+              <option value="fixed">Valor fixo (R$)</option>
+            </select>
+          </label>
+          <AdminField
+            label={form.discountType === "percentage" ? "Desconto (%)" : "Desconto (R$)"}
+            type="number"
+            value={String(form.discountValue)}
+            onChange={(value) => setForm({ ...form, discountValue: Number(value) })}
+          />
+          <AdminField label="Pedido mínimo (R$)" type="number" value={String(form.minimumOrder)} onChange={(value) => setForm({ ...form, minimumOrder: Number(value) })} />
+          <AdminField label="Limite de usos (opcional)" type="number" value={form.usageLimit} onChange={(value) => setForm({ ...form, usageLimit: value })} />
+          <label className="field-label">
+            Início (opcional)
+            <input type="datetime-local" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} className="field" />
+          </label>
+          <label className="field-label">
+            Término (opcional)
+            <input type="datetime-local" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} className="field" />
+          </label>
+          <label className="check-row self-end">
+            <input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} />
+            Cupom ativo
+          </label>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button type="button" onClick={saveCoupon} disabled={saving} className="gold-button disabled:opacity-50">
+            <Save size={16} /> {saving ? "Salvando" : "Salvar cupom"}
+          </button>
+          {form.id && <button type="button" onClick={() => setForm(emptyCoupon)} className="outline-button">Cancelar edição</button>}
+        </div>
+        {message && <p className="mt-3 text-sm text-emerald-200">{message}</p>}
+        {error && <p className="mt-3 text-sm text-red-200">{error}</p>}
+      </section>
+
+      <section className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-[#0A0A0A] p-5">
+        <table className="admin-table min-w-[900px]">
+          <thead><tr><th>Código</th><th>Desconto</th><th>Pedido mínimo</th><th>Usos</th><th>Validade</th><th>Status</th><th /></tr></thead>
+          <tbody>
+            {coupons.map((coupon) => (
+              <tr key={coupon.id}>
+                <td className="font-semibold text-champagne">{coupon.code}</td>
+                <td>{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : money.format(coupon.discountValue)}</td>
+                <td>{money.format(coupon.minimumOrder)}</td>
+                <td>{coupon.usedCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ""}</td>
+                <td>{coupon.endsAt ? new Date(coupon.endsAt).toLocaleDateString("pt-BR") : "Sem expiração"}</td>
+                <td className={coupon.active ? "text-emerald-200" : "text-white/30"}>{coupon.active ? "Ativo" : "Inativo"}</td>
+                <td>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => editCoupon(coupon)} className="admin-icon-button"><Edit3 size={15} /></button>
+                    <button type="button" onClick={() => deleteCoupon(coupon.id)} className="admin-icon-button text-red-300"><Trash2 size={15} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {!loading && coupons.length === 0 && <tr><td colSpan={7} className="text-center text-white/35">Nenhum cupom cadastrado.</td></tr>}
+          </tbody>
+        </table>
+        {loading && <p className="py-8 text-center text-sm text-white/35">Carregando cupons...</p>}
+      </section>
+    </AdminShell>
+  );
 }
 
 export function AdminDeliveryPage() {
