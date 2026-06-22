@@ -4,6 +4,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const roundMoney = (value: number) => Math.round(value * 100) / 100;
 export const FREE_SHIPPING_OYSTER_UNITS = 24;
+export const PIX_DISCOUNT_PERCENTAGE = 5;
+
+export function calculatePixDiscount(itemsSubtotal: number) {
+  return roundMoney(itemsSubtotal * (PIX_DISCOUNT_PERCENTAGE / 100));
+}
+
+export function combineDiscounts(itemsSubtotal: number, ...discounts: number[]) {
+  return roundMoney(
+    Math.min(itemsSubtotal, discounts.reduce((total, discount) => total + Math.max(0, discount), 0)),
+  );
+}
 
 function parseProductUnits(value?: string | null) {
   const match = value?.match(/\d+/);

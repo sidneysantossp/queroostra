@@ -49,7 +49,12 @@ import { OysterLogo } from "@/components/oyster-logo";
 import { syncLocalCart } from "@/lib/cart-sync";
 import { addons, deliveryWindows, products } from "@/lib/catalog";
 import { DEMO_ORDERS_KEY, DEMO_SESSION_KEY } from "@/lib/demo-data";
-import { priceCart } from "@/lib/pricing";
+import {
+  calculatePixDiscount,
+  combineDiscounts,
+  PIX_DISCOUNT_PERCENTAGE,
+  priceCart,
+} from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { addressSchema, customerSchema } from "@/lib/validation";
@@ -327,15 +332,36 @@ export function CheckoutPage() {
 
   const pricing = useMemo(() => {
     try {
-      return priceCart(
+      const basePricing = priceCart(
         store.cart,
         Math.max(1, store.selectedDates.length),
         deliveryFee,
-        appliedCoupon?.discount ?? 0,
       );
+      const couponDiscount = appliedCoupon?.discount ?? 0;
+      const pixDiscount =
+        store.paymentMethod === "PIX"
+          ? Math.min(
+              calculatePixDiscount(basePricing.totals.itemsSubtotal),
+              Math.max(0, basePricing.totals.itemsSubtotal - couponDiscount),
+            )
+          : 0;
+      const combinedDiscount = combineDiscounts(
+        basePricing.totals.itemsSubtotal,
+        couponDiscount,
+        pixDiscount,
+      );
+      const finalPricing = priceCart(
+        store.cart,
+        Math.max(1, store.selectedDates.length),
+        deliveryFee,
+        combinedDiscount,
+      );
+      return { ...finalPricing, couponDiscount, pixDiscount };
     } catch {
       return {
         items: [],
+        couponDiscount: 0,
+        pixDiscount: 0,
         totals: {
           itemsSubtotal: 0,
           deliveryFeePerDate: deliveryFee,
@@ -346,7 +372,7 @@ export function CheckoutPage() {
         },
       };
     }
-  }, [appliedCoupon?.discount, deliveryFee, store.cart, store.selectedDates.length]);
+  }, [appliedCoupon?.discount, deliveryFee, store.cart, store.paymentMethod, store.selectedDates.length]);
 
   useEffect(() => {
     setAppliedCoupon(null);
@@ -1194,7 +1220,9 @@ export function CheckoutPage() {
                     >
                       <QrCode size={26} />
                       <span className="font-display text-2xl">PIX</span>
-                      <span className="text-xs opacity-55">Confirmação rápida</span>
+                      <span className="text-xs font-semibold text-emerald-200">
+                        {PIX_DISCOUNT_PERCENTAGE}% de desconto
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -1353,10 +1381,16 @@ export function CheckoutPage() {
                 {pricing.totals.deliveryFees === 0 ? "Grátis" : money.format(pricing.totals.deliveryFees)}
               </span>
             </div>
-            {pricing.totals.discount > 0 && (
+            {pricing.couponDiscount > 0 && (
               <div className="flex justify-between text-emerald-200">
-                <span>Desconto {appliedCoupon ? `(${appliedCoupon.code})` : ""}</span>
-                <span>- {money.format(pricing.totals.discount)}</span>
+                <span>Cupom {appliedCoupon ? `(${appliedCoupon.code})` : ""}</span>
+                <span>- {money.format(pricing.couponDiscount)}</span>
+              </div>
+            )}
+            {pricing.pixDiscount > 0 && (
+              <div className="flex justify-between text-emerald-200">
+                <span>Desconto PIX ({PIX_DISCOUNT_PERCENTAGE}%)</span>
+                <span>- {money.format(pricing.pixDiscount)}</span>
               </div>
             )}
             <div className="flex items-end justify-between pt-2">

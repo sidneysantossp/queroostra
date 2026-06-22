@@ -9,7 +9,12 @@ import {
 import { validateCoupon } from "@/lib/coupons";
 import { calculateDeliveryQuote } from "@/lib/delivery";
 import type { CreatedOrder, PaymentStatus } from "@/lib/domain";
-import { priceCart, priceCartFromDatabase } from "@/lib/pricing";
+import {
+  calculatePixDiscount,
+  combineDiscounts,
+  priceCart,
+  priceCartFromDatabase,
+} from "@/lib/pricing";
 import { loadAsaasSettings } from "@/lib/secure-settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -73,6 +78,7 @@ export async function POST(request: Request) {
   let priced;
   let couponId: string | null = null;
   let couponUsedCount = 0;
+  let couponDiscount = 0;
   try {
     priced = admin
       ? await priceCartFromDatabase(
@@ -93,13 +99,33 @@ export async function POST(request: Request) {
       if (!couponResult.valid) throw new Error(couponResult.error);
       couponId = couponResult.coupon.id;
       couponUsedCount = couponResult.coupon.usedCount;
-      priced = await priceCartFromDatabase(
-        admin,
-        payload.cart,
-        payload.selectedDates.length,
-        delivery.fee,
-        couponResult.discount,
-      );
+      couponDiscount = couponResult.discount;
+    }
+
+    const pixDiscount =
+      payload.paymentMethod === "PIX"
+        ? calculatePixDiscount(priced.totals.itemsSubtotal)
+        : 0;
+    const combinedDiscount = combineDiscounts(
+      priced.totals.itemsSubtotal,
+      couponDiscount,
+      pixDiscount,
+    );
+    if (combinedDiscount > 0) {
+      priced = admin
+        ? await priceCartFromDatabase(
+            admin,
+            payload.cart,
+            payload.selectedDates.length,
+            delivery.fee,
+            combinedDiscount,
+          )
+        : priceCart(
+            payload.cart,
+            payload.selectedDates.length,
+            delivery.fee,
+            combinedDiscount,
+          );
     }
   } catch (error) {
     return NextResponse.json(
