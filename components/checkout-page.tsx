@@ -1231,7 +1231,7 @@ export function CheckoutPage() {
                     >
                       <CreditCard size={26} />
                       <span className="font-display text-2xl">Cartão</span>
-                      <span className="text-xs opacity-55">Ambiente seguro Asaas</span>
+                      <span className="text-xs opacity-55">Pagamento seguro</span>
                     </button>
                   </div>
 

@@ -302,7 +302,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
                 <h2 className="font-display text-3xl">Concluir pagamento</h2>
               </div>
               <p className="mt-4 text-sm leading-7 text-white/50">
-                Finalize o pagamento no ambiente seguro do Asaas para confirmar sua reserva.
+                Finalize o pagamento no ambiente seguro para confirmar sua reserva.
               </p>
               <a href={order.invoiceUrl} className="gold-button mt-5">
                 Pagar com cartão <ArrowRight size={16} />
