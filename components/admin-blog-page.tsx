@@ -4,13 +4,15 @@ import { Edit3, FileText, ImageIcon, Plus, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { AdminHeading, AdminShell } from "@/components/admin-shell";
-import type { BlogCategory, BlogPost } from "@/lib/blog";
+import { AdminAuthorManager } from "@/components/admin-author-manager";
+import type { BlogAuthor, BlogCategory, BlogPost } from "@/lib/blog";
 
 const emptyPost = (): BlogPost => ({ id: "", title: "", slug: "", excerpt: "", content: "", authorName: "Quero Ostra", status: "draft", tags: [], readingTime: 5 });
 
 export function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [authors, setAuthors] = useState<BlogAuthor[]>([]);
   const [form, setForm] = useState<BlogPost>(emptyPost());
   const [categoryName, setCategoryName] = useState("");
   const [message, setMessage] = useState("");
@@ -18,9 +20,9 @@ export function AdminBlogPage() {
 
   async function load() {
     const response = await fetch("/api/admin/blog", { cache: "no-store" });
-    const data = (await response.json()) as { posts?: BlogPost[]; categories?: BlogCategory[]; error?: string };
+    const data = (await response.json()) as { posts?: BlogPost[]; categories?: BlogCategory[]; authors?: BlogAuthor[]; error?: string };
     if (!response.ok) { setError(data.error ?? "Falha ao carregar blog."); return; }
-    setPosts(data.posts ?? []); setCategories(data.categories ?? []);
+    setPosts(data.posts ?? []); setCategories(data.categories ?? []); setAuthors(data.authors ?? []);
   }
   useEffect(() => { void load(); }, []);
   const slugify = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -60,7 +62,7 @@ export function AdminBlogPage() {
           <label className="field-label">Categoria<select className="field" value={form.categoryId ?? ""} onChange={(e) => setForm({ ...form, categoryId: e.target.value || undefined })}><option value="">Sem categoria</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
           <label className="field-label md:col-span-2">Resumo<textarea className="field min-h-24" value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} /></label>
           <label className="field-label md:col-span-2">Conteúdo em Markdown<textarea className="field min-h-[420px] font-mono text-sm leading-6" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder={'## Título da seção\n\nParágrafo do artigo.\n\n- Item de lista\n- Outro item'} /></label>
-          <label className="field-label">Autor<input className="field" value={form.authorName} onChange={(e) => setForm({ ...form, authorName: e.target.value })} /></label>
+          <label className="field-label">Autor<select className="field" value={form.authorId ?? ""} onChange={(e) => { const author = authors.find((item) => item.id === e.target.value); setForm({ ...form, authorId: author?.id, author, authorName: author?.fullName ?? "Quero Ostra" }); }}><option value="">Autoria institucional</option>{authors.filter((author) => author.active).map((author) => <option key={author.id} value={author.id}>{author.fullName} - {author.jobTitle}</option>)}</select></label>
           <label className="field-label">Status<select className="field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as BlogPost["status"] })}><option value="draft">Rascunho</option><option value="published">Publicado</option></select></label>
           <label className="field-label">Palavra-chave principal<input className="field" value={form.focusKeyword ?? ""} onChange={(e) => setForm({ ...form, focusKeyword: e.target.value })} /></label>
           <label className="field-label">Tags, separadas por vírgula<input className="field" value={form.tags.join(", ")} onChange={(e) => setForm({ ...form, tags: e.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} /></label>
@@ -76,5 +78,6 @@ export function AdminBlogPage() {
       </aside>
     </div>
     <section className="mt-7 overflow-x-auto rounded-2xl border border-white/10 bg-[#0A0A0A] p-5"><table className="admin-table min-w-[850px]"><thead><tr><th>Artigo</th><th>Categoria</th><th>Status</th><th>Data</th><th /></tr></thead><tbody>{posts.map((post) => <tr key={post.id}><td className="font-semibold text-pearl">{post.title}<span className="block text-[0.62rem] text-white/25">/{post.slug}</span></td><td>{post.category?.name ?? "-"}</td><td className={post.status === "published" ? "text-emerald-200" : "text-amber-200"}>{post.status === "published" ? "Publicado" : "Rascunho"}</td><td>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("pt-BR") : "-"}</td><td><div className="flex gap-2"><button onClick={() => { setForm(post); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="admin-icon-button"><Edit3 size={14} /></button><button onClick={() => remove(post.id, "post")} className="admin-icon-button text-red-200"><Trash2 size={14} /></button></div></td></tr>)}</tbody></table></section>
+    <AdminAuthorManager authors={authors} reload={load} />
   </AdminShell>;
 }

@@ -46,6 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Gerar URLs dinâmicas dos produtos
   const productPages: MetadataRoute.Sitemap = [];
   const blogPages: MetadataRoute.Sitemap = [];
+  const authorPages: MetadataRoute.Sitemap = [];
   try {
     const admin = createAdminClient();
     if (admin) {
@@ -79,10 +80,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.75,
         });
       }
+      const { data: authors } = await admin.from("blog_authors").select("slug, updated_at").eq("active", true).order("full_name");
+      for (const author of authors ?? []) {
+        authorPages.push({ url: `${siteUrl}/blog/autor/${author.slug}`, lastModified: new Date(author.updated_at), changeFrequency: "monthly", priority: 0.7 });
+      }
     }
   } catch {
     /* Fallback: sitemap still works with static pages only */
   }
 
-  return [...staticPages, ...productPages, ...blogPages];
+  return [...staticPages, ...productPages, ...blogPages, ...authorPages];
 }

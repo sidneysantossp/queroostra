@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title, description, alternates: { canonical },
     keywords: [post.focusKeyword, ...post.tags].filter(Boolean) as string[],
-    authors: [{ name: post.authorName }],
+    authors: [{ name: post.authorName, url: post.author ? `${SITE_URL}/blog/autor/${post.author.slug}` : SITE_URL }],
     openGraph: { type: "article", url: canonical, title, description, publishedTime: post.publishedAt, modifiedTime: post.updatedAt, authors: [post.authorName], tags: post.tags, images: [{ url: post.featuredImage ?? `${SITE_URL}/images/hero-oysters.png`, width: 1200, height: 630, alt: post.imageAlt || post.title }] },
     twitter: { card: "summary_large_image", title, description, images: [post.featuredImage ?? `${SITE_URL}/images/hero-oysters.png`] },
   };
@@ -52,7 +52,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
     "@context": "https://schema.org", "@type": "BlogPosting", "@id": `${canonical}#article`,
     headline: post.title, description: post.seoDescription || post.excerpt, image: [absoluteImage],
     datePublished: post.publishedAt, dateModified: post.updatedAt || post.publishedAt,
-    author: { "@type": "Organization", name: post.authorName, url: SITE_URL },
+    author: post.author ? { "@type": "Person", "@id": `${SITE_URL}/blog/autor/${post.author.slug}#person`, name: post.author.fullName, url: `${SITE_URL}/blog/autor/${post.author.slug}`, jobTitle: post.author.jobTitle, image: post.author.photoUrl, sameAs: [post.author.linkedinUrl, post.author.instagramUrl, post.author.portfolioUrl].filter(Boolean) } : { "@type": "Organization", name: post.authorName, url: SITE_URL },
     publisher: { "@type": "Organization", name: "Quero Ostra", url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` } },
     mainEntityOfPage: { "@type": "WebPage", "@id": canonical }, articleSection: post.category?.name, keywords: [post.focusKeyword, ...post.tags].filter(Boolean).join(", "), wordCount: post.content.split(/\s+/).length, inLanguage: "pt-BR",
   };
@@ -77,7 +77,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-gold">{post.category?.name ?? "Blog Quero Ostra"}</p>
           <h1 className="mx-auto mt-4 max-w-5xl font-display text-5xl leading-[.95] md:text-7xl">{post.title}</h1>
           <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-white/55">{post.excerpt}</p>
-          <div className="mt-6 flex flex-wrap justify-center gap-5 text-xs text-white/35"><span className="flex items-center gap-2"><CalendarDays size={14} /> {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("pt-BR") : ""}</span><span className="flex items-center gap-2"><Clock3 size={14} /> {post.readingTime} minutos</span><span>Por {post.authorName}</span></div>
+          <div className="mt-6 flex flex-wrap justify-center gap-5 text-xs text-white/35"><span className="flex items-center gap-2"><CalendarDays size={14} /> {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("pt-BR") : ""}</span><span className="flex items-center gap-2"><Clock3 size={14} /> {post.readingTime} minutos</span>{post.author ? <Link className="transition hover:text-gold" href={`/blog/autor/${post.author.slug}`}>Por {post.authorName}</Link> : <span>Por {post.authorName}</span>}</div>
           <div className="mt-6 flex justify-center gap-3">{share.map(({ label, href, Icon }) => <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={`Compartilhar no ${label}`} className="grid size-10 place-items-center rounded-full border border-white/10 text-white/45 transition hover:border-gold hover:text-gold"><Icon size={17} /></a>)}</div>
         </header>
 
@@ -85,6 +85,8 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
         <div className="mx-auto max-w-[850px] px-5 py-14 md:px-8 md:py-20">
           <BlogContent content={post.content} middleCta={<Link href="/cardapio" className="my-12 block rounded-2xl border border-gold/30 bg-[linear-gradient(120deg,rgba(214,171,49,.16),rgba(214,171,49,.03))] p-7 md:p-9"><p className="text-xs uppercase tracking-[0.17em] text-gold">Do conteúdo para a mesa</p><h2 className="mt-3 font-display text-3xl md:text-4xl">Conheça as experiências Quero Ostra</h2><p className="mt-3 text-sm leading-7 text-white/50">Escolha sua porção e programe a entrega para a data do seu momento especial.</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.13em] text-champagne">Conhecer o cardápio <ArrowRight size={14} /></span></Link>} />
+
+          {post.author && <Link href={`/blog/autor/${post.author.slug}`} className="mt-12 grid gap-5 rounded-2xl border border-white/10 bg-charcoal p-6 transition hover:border-gold/35 sm:grid-cols-[88px_1fr]"><div className="relative size-[88px] overflow-hidden rounded-full bg-white/5">{post.author.photoUrl && <Image src={post.author.photoUrl} alt={post.author.photoAlt || post.author.fullName} fill unoptimized={post.author.photoUrl.startsWith("http")} className="object-cover" sizes="88px" />}</div><div><p className="text-[0.62rem] uppercase tracking-[0.15em] text-gold">Sobre o autor</p><h2 className="mt-2 font-display text-2xl">{post.author.fullName}</h2><p className="text-sm text-champagne">{post.author.jobTitle}</p><p className="mt-3 text-sm leading-6 text-white/45">{post.author.shortBio}</p></div></Link>}
 
           <section className="mt-14 rounded-2xl border border-gold/40 bg-gold-gradient p-7 text-ink md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.16em]">Sua primeira experiência</p>
