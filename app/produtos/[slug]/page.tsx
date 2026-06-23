@@ -317,7 +317,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
       <section className="mx-auto grid max-w-[1280px] gap-10 px-5 py-10 md:px-8 lg:grid-cols-[.95fr_1.05fr] lg:py-16">
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <ProductMediaGallery productName={product.name} cover={galleryCover} media={product.media ?? []} />
+          <ProductMediaGallery
+            productName={product.name}
+            showPreparedBadge={product.type === "fresh" || product.type === "gratinated"}
+            cover={galleryCover}
+            media={product.media ?? []}
+          />
         </div>
 
         <article className="flex flex-col justify-center lg:pl-4">

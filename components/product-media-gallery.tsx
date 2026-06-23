@@ -7,10 +7,12 @@ import type { ProductMedia } from "@/lib/domain";
 
 export function ProductMediaGallery({
   productName,
+  showPreparedBadge,
   cover,
   media,
 }: {
   productName: string;
+  showPreparedBadge: boolean;
   cover: ProductMedia;
   media: ProductMedia[];
 }) {
@@ -39,13 +41,15 @@ export function ProductMediaGallery({
             fill
             priority={activeIndex === 0}
             unoptimized={active.url.startsWith("http")}
-            className="object-contain"
+            className="object-cover"
             sizes="(max-width: 1023px) 100vw, 52vw"
           />
         )}
-        <span className="absolute bottom-4 left-4 rounded-full border border-gold/30 bg-black/75 px-4 py-2 text-[0.6rem] uppercase tracking-[0.15em] text-champagne">
-          {active.type === "video" ? "Vídeo da experiência" : "Preparado sob demanda"}
-        </span>
+        {(active.type === "video" || showPreparedBadge) && (
+          <span className="absolute bottom-4 left-4 rounded-full border border-gold/30 bg-black/75 px-4 py-2 text-[0.6rem] uppercase tracking-[0.15em] text-champagne">
+            {active.type === "video" ? "Vídeo da experiência" : "Preparado sob demanda"}
+          </span>
+        )}
       </div>
 
       <div className="mt-3 grid grid-cols-5 gap-2" aria-label="Galeria do produto">
