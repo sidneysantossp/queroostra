@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Tags,
   TicketPercent,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -31,6 +32,7 @@ const adminNavigation = [
   { href: "/admin/adicionais", label: "Adicionais", icon: Tags },
   { href: "/admin/cupons", label: "Cupons", icon: TicketPercent },
   { href: "/admin/blog", label: "Blog", icon: BookOpenText },
+  { href: "/admin/autores", label: "Autores", icon: UserRound },
   { href: "/admin/usuarios", label: "Usuários", icon: Users },
   { href: "/admin/entregas", label: "Áreas de entrega", icon: MapPinned },
   { href: "/admin/calendario", label: "Calendário", icon: CalendarRange },

@@ -8,7 +8,22 @@ const postSchema = z.object({
   id: z.uuid().optional(), categoryId: z.uuid().nullable().optional(), authorId: z.uuid().nullable().optional(), title: z.string().min(5), slug: z.string().min(3), excerpt: z.string().min(20), content: z.string().min(50), featuredImage: z.string().optional(), imageAlt: z.string().optional(), authorName: z.string().min(2), status: z.enum(["draft", "published"]), publishedAt: z.string().nullable().optional(), seoTitle: z.string().optional(), seoDescription: z.string().optional(), focusKeyword: z.string().optional(), tags: z.array(z.string()),
 });
 const authorSchema = z.object({
-  id: z.uuid().optional(), fullName: z.string().min(3), slug: z.string().min(3), jobTitle: z.string().min(3), shortBio: z.string().min(20), biography: z.string().min(50), photoUrl: z.string().optional(), photoAlt: z.string().optional(), education: z.array(z.string()), certifications: z.array(z.string()), awards: z.array(z.string()), expertise: z.array(z.string()), linkedinUrl: z.string().optional(), instagramUrl: z.string().optional(), portfolioUrl: z.string().optional(), active: z.boolean(),
+  id: z.uuid().optional(),
+  fullName: z.string().min(2),
+  slug: z.string().min(2),
+  jobTitle: z.string().optional().default(""),
+  shortBio: z.string().optional().default(""),
+  biography: z.string().optional().default(""),
+  photoUrl: z.string().optional(),
+  photoAlt: z.string().optional(),
+  education: z.array(z.string()).optional().default([]),
+  certifications: z.array(z.string()).optional().default([]),
+  awards: z.array(z.string()).optional().default([]),
+  expertise: z.array(z.string()).optional().default([]),
+  linkedinUrl: z.string().optional(),
+  instagramUrl: z.string().optional(),
+  portfolioUrl: z.string().optional(),
+  active: z.boolean(),
 });
 
 export async function GET() {
@@ -41,7 +56,7 @@ export async function POST(request: Request) {
   }
   if (body.type === "author") {
     const parsed = authorSchema.safeParse(body.data);
-    if (!parsed.success) return NextResponse.json({ error: "Revise os campos obrigatorios do autor." }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: "Informe pelo menos nome e slug do autor." }, { status: 400 });
     const author = parsed.data;
     const row = { full_name: author.fullName, slug: author.slug, job_title: author.jobTitle, short_bio: author.shortBio, biography: author.biography, photo_url: author.photoUrl || null, photo_alt: author.photoAlt || null, education: author.education, certifications: author.certifications, awards: author.awards, expertise: author.expertise, linkedin_url: author.linkedinUrl || null, instagram_url: author.instagramUrl || null, portfolio_url: author.portfolioUrl || null, active: author.active };
     const query = author.id ? context.supabase.from("blog_authors").update(row).eq("id", author.id) : context.supabase.from("blog_authors").insert(row);
