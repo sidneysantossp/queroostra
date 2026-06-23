@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminContext } from "@/lib/admin-auth";
-import type { ProductRecord } from "@/lib/domain";
+import type { ProductMedia, ProductRecord } from "@/lib/domain";
+
+const mediaSchema = z.object({
+  id: z.string().optional(),
+  url: z.string().min(1),
+  type: z.enum(["image", "video"]),
+  mimeType: z.string().optional(),
+  posterUrl: z.string().optional(),
+  alt: z.string().optional(),
+  displayOrder: z.number().int().min(1).max(4),
+});
 
 const productSchema = z.object({
   id: z.uuid(),
@@ -18,6 +28,7 @@ const productSchema = z.object({
   active: z.boolean(),
   featured: z.boolean(),
   image: z.string().optional(),
+  media: z.array(mediaSchema).max(4).optional(),
   includedItems: z.array(z.string()),
   preparationHours: z.number().int().min(0),
   approximateVolume: z.string().optional(),
@@ -30,7 +41,16 @@ const listSchema = z.object({ products: z.array(productSchema) });
 
 function mapProduct(row: Record<string, unknown>): ProductRecord {
   const images = Array.isArray(row.product_images)
-    ? (row.product_images as { storage_path: string; is_primary: boolean }[])
+    ? (row.product_images as {
+        id: string;
+        storage_path: string;
+        is_primary: boolean;
+        media_type?: "image" | "video";
+        mime_type?: string;
+        poster_path?: string;
+        alt_text?: string;
+        display_order: number;
+      }[])
     : [];
   const category = row.product_categories as
     | { name?: string }
@@ -59,6 +79,18 @@ function mapProduct(row: Record<string, unknown>): ProductRecord {
     active: Boolean(row.active),
     featured: Boolean(row.featured),
     image: images.find((image) => image.is_primary)?.storage_path,
+    media: images
+      .filter((image) => !image.is_primary)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((image): ProductMedia => ({
+        id: image.id,
+        url: image.storage_path,
+        type: image.media_type ?? "image",
+        mimeType: image.mime_type ?? undefined,
+        posterUrl: image.poster_path ?? undefined,
+        alt: image.alt_text ?? undefined,
+        displayOrder: image.display_order,
+      })),
     includedItems: Array.isArray(row.included_items)
       ? (row.included_items as string[])
       : [],
@@ -129,19 +161,35 @@ export async function PUT(request: Request) {
   }
 
   for (const product of parsed.data.products) {
-    if (!product.image) continue;
     await context.supabase
       .from("product_images")
       .delete()
-      .eq("product_id", product.id)
-      .eq("is_primary", true);
-    await context.supabase.from("product_images").insert({
-      product_id: product.id,
-      storage_path: product.image,
-      alt_text: product.name,
-      is_primary: true,
-      display_order: 0,
-    });
+      .eq("product_id", product.id);
+    const mediaRows = [
+      ...(product.image ? [{
+        product_id: product.id,
+        storage_path: product.image,
+        alt_text: product.name,
+        is_primary: true,
+        display_order: 0,
+        media_type: "image",
+        mime_type: null,
+        poster_path: null,
+      }] : []),
+      ...(product.media ?? []).map((media, index) => ({
+        product_id: product.id,
+        storage_path: media.url,
+        alt_text: media.alt || `${product.name} - mídia ${index + 2}`,
+        is_primary: false,
+        display_order: index + 1,
+        media_type: media.type,
+        mime_type: media.mimeType ?? null,
+        poster_path: media.posterUrl ?? null,
+      })),
+    ];
+    if (mediaRows.length > 0) {
+      await context.supabase.from("product_images").insert(mediaRows);
+    }
   }
 
   const incomingIds = rows.map((row) => row.id);

@@ -12,6 +12,7 @@ import {
   FileText,
   Filter,
   ImageIcon,
+  GripVertical,
   MessageCircle,
   MapPin,
   Package,
@@ -26,8 +27,11 @@ import {
   TrendingUp,
   Truck,
   TicketPercent,
+  Upload,
   Users,
+  Video,
   WalletCards,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,7 +39,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminHeading, AdminShell } from "@/components/admin-shell";
 import { addons as initialAddons, deliveryWindows, products as initialProducts } from "@/lib/catalog";
 import { sampleOrder } from "@/lib/demo-data";
-import type { AddonRecord, ProductRecord } from "@/lib/domain";
+import type { AddonRecord, ProductMedia, ProductRecord } from "@/lib/domain";
 import type { CreatedOrder } from "@/lib/domain";
 import type { CouponRecord } from "@/lib/coupons";
 import { supabaseConfigured } from "@/lib/supabase/config";
@@ -323,6 +327,10 @@ export function AdminProductForm({ productId }: { productId?: string }) {
     if (existing) setForm(existing);
   }, [existing]);
   const [saved, setSaved] = useState(false);
+  const [includedItem, setIncludedItem] = useState("");
+  const [mediaMessage, setMediaMessage] = useState("");
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [draggedMediaIndex, setDraggedMediaIndex] = useState<number | null>(null);
   function submit() {
     const next = existing ? items.map((item) => item.id === existing.id ? form : item) : [form, ...items];
     save(next);
@@ -332,6 +340,7 @@ export function AdminProductForm({ productId }: { productId?: string }) {
     if (!file || !supabaseConfigured) return;
     const upload = new FormData();
     upload.append("file", file);
+    upload.append("scope", "product");
     const response = await fetch("/api/admin/upload", {
       method: "POST",
       body: upload,
@@ -339,6 +348,59 @@ export function AdminProductForm({ productId }: { productId?: string }) {
     if (!response.ok) return;
     const data = (await response.json()) as { url: string };
     setForm((current) => ({ ...current, image: data.url }));
+  }
+  async function uploadGalleryMedia(files: File[]) {
+    const available = 4 - (form.media?.length ?? 0);
+    if (available <= 0) {
+      setMediaMessage("A galeria aceita até 4 mídias adicionais.");
+      return;
+    }
+    const selected = files
+      .filter((file) => file.type.startsWith("image/") || file.type.startsWith("video/"))
+      .slice(0, available);
+    if (selected.length === 0 || !supabaseConfigured) return;
+    setMediaUploading(true);
+    setMediaMessage("");
+    const uploaded: ProductMedia[] = [];
+    for (const file of selected) {
+      const upload = new FormData();
+      upload.append("file", file);
+      upload.append("scope", "product");
+      const response = await fetch("/api/admin/upload", { method: "POST", body: upload });
+      const data = (await response.json()) as { url?: string; type?: "image" | "video"; mimeType?: string; error?: string };
+      if (!response.ok || !data.url || !data.type) {
+        setMediaMessage(data.error ?? `Falha ao enviar ${file.name}.`);
+        continue;
+      }
+      uploaded.push({
+        url: data.url,
+        type: data.type,
+        mimeType: data.mimeType,
+        alt: `${form.name || "Produto"} - ${file.name}`,
+        displayOrder: (form.media?.length ?? 0) + uploaded.length + 1,
+      });
+    }
+    if (uploaded.length > 0) {
+      setForm((current) => ({
+        ...current,
+        media: [...(current.media ?? []), ...uploaded].map((media, index) => ({ ...media, displayOrder: index + 1 })),
+      }));
+      setMediaMessage(`${uploaded.length} mídia(s) adicionada(s). Salve o produto para publicar.`);
+    }
+    setMediaUploading(false);
+  }
+  function moveGalleryMedia(from: number, to: number) {
+    if (from === to) return;
+    const next = [...(form.media ?? [])];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setForm({ ...form, media: next.map((media, index) => ({ ...media, displayOrder: index + 1 })) });
+  }
+  function addIncludedItem() {
+    const value = includedItem.trim();
+    if (!value || form.includedItems.includes(value)) return;
+    setForm({ ...form, includedItems: [...form.includedItems, value] });
+    setIncludedItem("");
   }
   return (
     <AdminShell>
@@ -353,6 +415,21 @@ export function AdminProductForm({ productId }: { productId?: string }) {
             <AdminField label="Estoque" type="number" value={String(form.stock)} onChange={(stock) => setForm({ ...form, stock: Number(stock) })} />
             <AdminField label="Descrição curta" value={form.shortDescription} onChange={(shortDescription) => setForm({ ...form, shortDescription })} span />
             <label className="field-label md:col-span-2">Descrição completa<textarea value={form.fullDescription} onChange={(event) => setForm({ ...form, fullDescription: event.target.value })} className="field min-h-32 resize-none" /></label>
+            <div className="md:col-span-2">
+              <p className="field-label">Itens que acompanham</p>
+              <div className="mt-2 flex gap-2">
+                <input value={includedItem} onChange={(event) => setIncludedItem(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addIncludedItem(); } }} className="field" placeholder="Ex.: Limões selecionados" />
+                <button type="button" onClick={addIncludedItem} className="outline-button shrink-0"><Plus size={15} /> Adicionar</button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {form.includedItems.map((item) => (
+                  <span key={item} className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/[0.05] px-3 py-2 text-xs text-champagne">
+                    {item}
+                    <button type="button" onClick={() => setForm({ ...form, includedItems: form.includedItems.filter((current) => current !== item) })} aria-label={`Remover ${item}`}><X size={13} /></button>
+                  </span>
+                ))}
+              </div>
+            </div>
             <AdminField label="Título SEO" value={form.seoTitle ?? ""} onChange={(seoTitle) => setForm({ ...form, seoTitle })} span />
             <label className="field-label md:col-span-2">Descrição SEO<textarea value={form.seoDescription ?? ""} onChange={(event) => setForm({ ...form, seoDescription: event.target.value })} className="field min-h-24 resize-none" maxLength={160} /></label>
           </div>
@@ -360,7 +437,42 @@ export function AdminProductForm({ productId }: { productId?: string }) {
           {saved && <p className="mt-4 flex items-center gap-2 text-sm text-emerald-200"><Check size={16} /> Produto salvo no catálogo.</p>}
         </section>
         <aside className="space-y-6">
-          <section className="admin-panel"><h2 className="admin-panel-title"><ImageIcon size={20} /> Imagens</h2><label className="group relative mt-5 grid aspect-video w-full cursor-pointer place-items-center overflow-hidden rounded-xl border border-dashed border-gold/25 bg-[#050505] text-xs text-white/35">{form.image && <Image src={form.image} alt={form.name || "Imagem do produto"} fill unoptimized={form.image.startsWith("http")} className="object-contain p-4" sizes="320px" />}<span className={`relative z-10 rounded-full bg-black/70 px-4 py-2 ${form.image ? "opacity-0 transition group-hover:opacity-100" : ""}`}>{form.image ? "Substituir imagem" : "Enviar imagem principal"}</span><input type="file" accept="image/*" className="sr-only" onChange={(event) => void uploadProductImage(event.target.files?.[0])} /></label>{form.image && <p className="mt-3 truncate text-[0.62rem] text-white/25">{form.image}</p>}</section>
+          <section className="admin-panel">
+            <h2 className="admin-panel-title"><ImageIcon size={20} /> Imagem principal</h2>
+            <label className="group relative mt-5 grid aspect-video w-full cursor-pointer place-items-center overflow-hidden rounded-xl border border-dashed border-gold/25 bg-[#050505] text-xs text-white/35">{form.image && <Image src={form.image} alt={form.name || "Imagem do produto"} fill unoptimized={form.image.startsWith("http")} className="object-contain p-4" sizes="320px" />}<span className={`relative z-10 rounded-full bg-black/70 px-4 py-2 ${form.image ? "opacity-0 transition group-hover:opacity-100" : ""}`}>{form.image ? "Substituir imagem" : "Enviar imagem principal"}</span><input type="file" accept="image/*" className="sr-only" onChange={(event) => void uploadProductImage(event.target.files?.[0])} /></label>
+          </section>
+          <section className="admin-panel">
+            <h2 className="admin-panel-title"><Video size={20} /> Galeria</h2>
+            <p className="mt-2 text-xs leading-5 text-white/35">Até 4 imagens ou vídeos. Para Reels, envie MP4 vertical 9:16. Arraste os cards para ordenar.</p>
+            <label
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => { event.preventDefault(); void uploadGalleryMedia(Array.from(event.dataTransfer.files)); }}
+              className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gold/30 bg-gold/[0.03] px-4 py-7 text-center"
+            >
+              <Upload size={22} className="text-gold" />
+              <span className="mt-3 text-xs text-white/55">{mediaUploading ? "Enviando mídias..." : "Arraste arquivos ou clique para selecionar"}</span>
+              <span className="mt-1 text-[0.6rem] text-white/25">Imagens até 8 MB · vídeos até 80 MB</span>
+              <input type="file" multiple accept="image/*,video/mp4,video/webm,video/quicktime" className="sr-only" disabled={mediaUploading || (form.media?.length ?? 0) >= 4} onChange={(event) => void uploadGalleryMedia(Array.from(event.target.files ?? []))} />
+            </label>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {(form.media ?? []).map((media, index) => (
+                <article
+                  key={`${media.url}-${index}`}
+                  draggable
+                  onDragStart={() => setDraggedMediaIndex(index)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={() => { if (draggedMediaIndex !== null) moveGalleryMedia(draggedMediaIndex, index); setDraggedMediaIndex(null); }}
+                  className="relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-black"
+                >
+                  {media.type === "video" ? <video src={media.url} muted playsInline preload="metadata" className="size-full object-cover" /> : <Image src={media.url} alt={media.alt ?? ""} fill unoptimized={media.url.startsWith("http")} className="object-cover" sizes="150px" />}
+                  <span className="absolute left-2 top-2 grid size-7 cursor-grab place-items-center rounded-full bg-black/75 text-white/65"><GripVertical size={14} /></span>
+                  <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2 py-1 text-[0.55rem] uppercase text-white/65">{media.type === "video" ? "Vídeo" : `Imagem ${index + 2}`}</span>
+                  <button type="button" onClick={() => setForm({ ...form, media: (form.media ?? []).filter((_, mediaIndex) => mediaIndex !== index).map((item, mediaIndex) => ({ ...item, displayOrder: mediaIndex + 1 })) })} className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-black/75 text-red-200" aria-label="Remover mídia"><X size={14} /></button>
+                </article>
+              ))}
+            </div>
+            {mediaMessage && <p className="mt-3 text-xs text-champagne">{mediaMessage}</p>}
+          </section>
           <section className="admin-panel"><h2 className="admin-panel-title"><Settings size={20} /> Publicação</h2><label className="check-row mt-5"><input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} /> Produto ativo</label><label className="check-row mt-3"><input type="checkbox" checked={form.featured} onChange={(event) => setForm({ ...form, featured: event.target.checked })} /> Destaque na home</label></section>
         </aside>
       </div>

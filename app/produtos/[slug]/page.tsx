@@ -14,9 +14,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OysterLogo } from "@/components/oyster-logo";
+import { ProductMediaGallery } from "@/components/product-media-gallery";
 import { ProductPurchasePanel } from "@/components/product-purchase-panel";
 import { products } from "@/lib/catalog";
-import type { ProductRecord } from "@/lib/domain";
+import type { ProductMedia, ProductRecord } from "@/lib/domain";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://queroostra.com.br";
@@ -105,6 +106,24 @@ async function getProductBySlug(slug: string): Promise<ProductRecord | undefined
     active: data.active,
     featured: data.featured,
     image: imageUrl,
+    media: (data.product_images ?? [])
+      .filter((media: { is_primary: boolean }) => !media.is_primary)
+      .sort((a: { display_order: number }, b: { display_order: number }) => a.display_order - b.display_order)
+      .map((media: { id: string; storage_path: string; media_type?: "image" | "video"; mime_type?: string; poster_path?: string; alt_text?: string; display_order: number }): ProductMedia => ({
+        id: media.id,
+        url: media.storage_path.startsWith("http")
+          ? media.storage_path
+          : admin.storage.from("products").getPublicUrl(media.storage_path).data.publicUrl,
+        type: media.media_type ?? "image",
+        mimeType: media.mime_type ?? undefined,
+        posterUrl: media.poster_path
+          ? media.poster_path.startsWith("http")
+            ? media.poster_path
+            : admin.storage.from("products").getPublicUrl(media.poster_path).data.publicUrl
+          : undefined,
+        alt: media.alt_text ?? undefined,
+        displayOrder: media.display_order,
+      })),
     includedItems: data.included_items ?? [],
     preparationHours: data.preparation_hours,
     approximateVolume: data.approximate_volume ?? undefined,
@@ -201,6 +220,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const category = categoryLabels[product.type];
   const content = typeContent[product.type];
   const imageUrl = product.image ?? "/images/hero-oysters.png";
+  const galleryCover: ProductMedia = {
+    url: imageUrl,
+    type: "image",
+    alt: `${product.name} - ${product.shortDescription}`,
+    displayOrder: 0,
+  };
   const absoluteImageUrl = imageUrl.startsWith("http") ? imageUrl : `${SITE_URL}${imageUrl}`;
   const price = product.promotionalPrice ?? product.price;
   const canonical = `${SITE_URL}/produtos/${product.slug}`;
@@ -233,7 +258,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     "@id": `${canonical}#product`,
     name: product.name,
     description: product.fullDescription || product.shortDescription,
-    image: [absoluteImageUrl],
+    image: [absoluteImageUrl, ...(product.media ?? []).filter((item) => item.type === "image").map((item) => item.url)],
     sku: product.externalKey ?? product.id,
     brand: { "@type": "Brand", name: "Quero Ostra" },
     category,
@@ -290,21 +315,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </nav>
       </div>
 
-      <section className="mx-auto grid max-w-[1280px] gap-10 px-5 py-10 md:px-8 lg:grid-cols-[1.05fr_.95fr] lg:py-16">
-        <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-gold/20 lg:sticky lg:top-6 lg:min-h-[680px]">
-          <Image
-            src={imageUrl}
-            alt={`${product.name} - ${product.shortDescription}`}
-            fill
-            priority
-            unoptimized={imageUrl.startsWith("http")}
-            className={product.type === "beverage" ? "object-contain p-8" : "object-cover"}
-            sizes="(max-width: 1023px) 100vw, 52vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-          <span className="absolute bottom-5 left-5 rounded-full border border-gold/30 bg-black/70 px-4 py-2 text-[0.62rem] uppercase tracking-[0.15em] text-champagne">
-            Preparado sob demanda
-          </span>
+      <section className="mx-auto grid max-w-[1280px] gap-10 px-5 py-10 md:px-8 lg:grid-cols-[.95fr_1.05fr] lg:py-16">
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          <ProductMediaGallery productName={product.name} cover={galleryCover} media={product.media ?? []} />
         </div>
 
         <article className="flex flex-col justify-center lg:pl-4">

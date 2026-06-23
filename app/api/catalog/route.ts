@@ -16,7 +16,10 @@ export async function GET() {
   if (error) return NextResponse.json({ products: fallbackProducts, fallback: true });
 
   const products: ProductRecord[] = (data ?? []).map((row) => {
-    const primaryImage = row.product_images?.find(
+    const sortedMedia = [...(row.product_images ?? [])].sort(
+      (a: { display_order: number }, b: { display_order: number }) => a.display_order - b.display_order,
+    );
+    const primaryImage = sortedMedia.find(
       (image: { is_primary: boolean }) => image.is_primary,
     );
     let imageUrl: string | undefined;
@@ -44,6 +47,22 @@ export async function GET() {
       active: row.active,
       featured: row.featured,
       image: imageUrl,
+      media: sortedMedia
+        .filter((media: { is_primary: boolean }) => !media.is_primary)
+        .map((media: { id: string; storage_path: string; media_type?: "image" | "video"; mime_type?: string; poster_path?: string; alt_text?: string; display_order: number }) => {
+          const publicUrl = media.storage_path.startsWith("http")
+            ? media.storage_path
+            : admin.storage.from("products").getPublicUrl(media.storage_path).data.publicUrl;
+          return {
+            id: media.id,
+            url: publicUrl,
+            type: media.media_type ?? "image",
+            mimeType: media.mime_type ?? undefined,
+            posterUrl: media.poster_path ?? undefined,
+            alt: media.alt_text ?? undefined,
+            displayOrder: media.display_order,
+          };
+        }),
       includedItems: row.included_items ?? [],
       preparationHours: row.preparation_hours,
       approximateVolume: row.approximate_volume ?? undefined,

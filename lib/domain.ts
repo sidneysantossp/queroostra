@@ -115,12 +115,23 @@ export type ProductRecord = {
   active: boolean;
   featured: boolean;
   image?: string;
+  media?: ProductMedia[];
   includedItems: string[];
   preparationHours: number;
   approximateVolume?: string;
   displayOrder: number;
   seoTitle?: string;
   seoDescription?: string;
+};
+
+export type ProductMedia = {
+  id?: string;
+  url: string;
+  type: "image" | "video";
+  mimeType?: string;
+  posterUrl?: string;
+  alt?: string;
+  displayOrder: number;
 };
 
 export type AddonRecord = {
