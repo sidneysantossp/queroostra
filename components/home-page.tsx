@@ -459,6 +459,7 @@ export function HomePage() {
                 {label}
               </button>
             ))}
+            <Link href="/blog" className="text-[0.69rem] font-semibold uppercase tracking-[0.16em] text-white/65 transition hover:text-champagne">Blog</Link>
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
@@ -1046,6 +1047,7 @@ export function HomePage() {
             <p className="footer-title">Institucional</p>
             <div className="footer-links">
               <Link href="/cardapio">Cardápio</Link>
+              <Link href="/blog">Blog</Link>
               <button onClick={() => scrollTo("experiencia")}>Sobre nós</button>
               <button onClick={() => scrollTo("como-funciona")}>Como funciona</button>
               <button onClick={() => scrollTo("faq")}>Perguntas frequentes</button>

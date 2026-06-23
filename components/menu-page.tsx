@@ -532,6 +532,7 @@ export function MenuPage() {
                 {label}
               </a>
             ))}
+            <Link href="/blog" className="text-[0.69rem] font-semibold uppercase tracking-[0.16em] text-white/65 transition hover:text-champagne">Blog</Link>
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
@@ -785,6 +786,7 @@ export function MenuPage() {
               <ArrowLeft size={16} />
               Página inicial
             </Link>
+            <Link href="/blog" className="outline-button">Blog</Link>
             <Link href="/#kits" className="gold-button">
               Fazer reserva
               <ArrowRight size={16} />

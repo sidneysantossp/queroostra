@@ -24,6 +24,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${siteUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
       url: `${siteUrl}/login`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -39,6 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Gerar URLs dinâmicas dos produtos
   const productPages: MetadataRoute.Sitemap = [];
+  const blogPages: MetadataRoute.Sitemap = [];
   try {
     const admin = createAdminClient();
     if (admin) {
@@ -58,10 +65,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           });
         }
       }
+      const { data: posts } = await admin
+        .from("blog_posts")
+        .select("slug, updated_at")
+        .eq("status", "published")
+        .lte("published_at", new Date().toISOString())
+        .order("published_at", { ascending: false });
+      for (const post of posts ?? []) {
+        blogPages.push({
+          url: `${siteUrl}/blog/${post.slug}`,
+          lastModified: new Date(post.updated_at),
+          changeFrequency: "monthly",
+          priority: 0.75,
+        });
+      }
     }
   } catch {
     /* Fallback: sitemap still works with static pages only */
   }
 
-  return [...staticPages, ...productPages];
+  return [...staticPages, ...productPages, ...blogPages];
 }

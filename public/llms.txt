@@ -11,6 +11,7 @@ A Quero Ostra é uma operação online especializada em experiências com ostras
 - Início: https://queroostra.com.br
 - Cardápio completo: https://queroostra.com.br/cardapio
 - Catálogo: https://queroostra.com.br/produtos
+- Blog sobre ostras: https://queroostra.com.br/blog
 - Brasa Gourmet: https://queroostra.com.br/produtos/brasa-gourmet
 - Experiência Degustação: https://queroostra.com.br/produtos/experiencia-degustacao
 - Experiência Happy Hour: https://queroostra.com.br/produtos/experiencia-happy-hour
@@ -35,6 +36,10 @@ A Quero Ostra é uma operação online especializada em experiências com ostras
 ## Conteúdo dos produtos
 
 As páginas individuais são a fonte preferencial para informações sobre cada produto. Elas incluem descrição comercial, itens inclusos, volume aproximado, antecedência de preparo, forma de servir, conservação, perguntas frequentes e disponibilidade.
+
+## Conteúdo editorial
+
+O blog reúne guias sobre ostras em São Paulo, delivery, locais para comer ostras, harmonização, entrega e conservação. Cada artigo possui autor, data, categoria, referências internas e dados estruturados próprios.
 
 ## Contato e redes
 

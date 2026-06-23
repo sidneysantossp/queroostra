@@ -2,6 +2,7 @@
 
 import {
   CalendarRange,
+  BookOpenText,
   ChevronRight,
   CircleDollarSign,
   FileText,
@@ -29,6 +30,7 @@ const adminNavigation = [
   { href: "/admin/produtos", label: "Produtos", icon: Package },
   { href: "/admin/adicionais", label: "Adicionais", icon: Tags },
   { href: "/admin/cupons", label: "Cupons", icon: TicketPercent },
+  { href: "/admin/blog", label: "Blog", icon: BookOpenText },
   { href: "/admin/usuarios", label: "Usuários", icon: Users },
   { href: "/admin/entregas", label: "Áreas de entrega", icon: MapPinned },
   { href: "/admin/calendario", label: "Calendário", icon: CalendarRange },
