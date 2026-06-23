@@ -8,11 +8,13 @@ import type { ProductMedia } from "@/lib/domain";
 export function ProductMediaGallery({
   productName,
   showPreparedBadge,
+  containImages,
   cover,
   media,
 }: {
   productName: string;
   showPreparedBadge: boolean;
+  containImages: boolean;
   cover: ProductMedia;
   media: ProductMedia[];
 }) {
@@ -41,7 +43,7 @@ export function ProductMediaGallery({
             fill
             priority={activeIndex === 0}
             unoptimized={active.url.startsWith("http")}
-            className="object-cover"
+            className={containImages ? "object-contain p-5 sm:p-7" : "object-cover"}
             sizes="(max-width: 1023px) 100vw, 52vw"
           />
         )}
@@ -72,7 +74,7 @@ export function ProductMediaGallery({
                 <span className="absolute inset-0 grid place-items-center bg-black/35"><Play size={18} className="fill-gold text-gold" /></span>
               </>
             ) : (
-              <Image src={item.url} alt="" fill unoptimized={item.url.startsWith("http")} className="object-cover" sizes="120px" />
+              <Image src={item.url} alt="" fill unoptimized={item.url.startsWith("http")} className={containImages ? "object-contain p-1.5" : "object-cover"} sizes="120px" />
             )}
           </button>
         ))}

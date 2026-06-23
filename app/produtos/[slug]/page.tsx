@@ -320,6 +320,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <ProductMediaGallery
             productName={product.name}
             showPreparedBadge={product.type === "fresh" || product.type === "gratinated"}
+            containImages={product.type === "beverage"}
             cover={galleryCover}
             media={product.media ?? []}
           />
