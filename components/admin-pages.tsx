@@ -316,6 +316,8 @@ export function AdminProductForm({ productId }: { productId?: string }) {
     includedItems: [],
     preparationHours: 18,
     displayOrder: items.length + 1,
+    seoTitle: "",
+    seoDescription: "",
   });
   useEffect(() => {
     if (existing) setForm(existing);
@@ -351,6 +353,8 @@ export function AdminProductForm({ productId }: { productId?: string }) {
             <AdminField label="Estoque" type="number" value={String(form.stock)} onChange={(stock) => setForm({ ...form, stock: Number(stock) })} />
             <AdminField label="Descrição curta" value={form.shortDescription} onChange={(shortDescription) => setForm({ ...form, shortDescription })} span />
             <label className="field-label md:col-span-2">Descrição completa<textarea value={form.fullDescription} onChange={(event) => setForm({ ...form, fullDescription: event.target.value })} className="field min-h-32 resize-none" /></label>
+            <AdminField label="Título SEO" value={form.seoTitle ?? ""} onChange={(seoTitle) => setForm({ ...form, seoTitle })} span />
+            <label className="field-label md:col-span-2">Descrição SEO<textarea value={form.seoDescription ?? ""} onChange={(event) => setForm({ ...form, seoDescription: event.target.value })} className="field min-h-24 resize-none" maxLength={160} /></label>
           </div>
           <button type="button" onClick={submit} className="gold-button mt-7"><Save size={16} /> Salvar produto</button>
           {saved && <p className="mt-4 flex items-center gap-2 text-sm text-emerald-200"><Check size={16} /> Produto salvo no catálogo.</p>}

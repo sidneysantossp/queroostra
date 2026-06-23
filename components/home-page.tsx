@@ -103,6 +103,12 @@ const categoryIcons = {
 };
 
 const AUTH_NEXT_STORAGE_KEY = "qo-auth-next";
+const experienceSlugs: Record<string, string> = {
+  gratinada: "brasa-gourmet",
+  baby: "experiencia-degustacao",
+  tradicional: "experiencia-happy-hour",
+  premium: "reserva-premium",
+};
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -137,6 +143,7 @@ export function HomePage() {
         return live
           ? {
               ...kit,
+              slug: live.slug,
               name: live.name,
               size: live.shortDescription,
               details: live.includedItems,
@@ -144,7 +151,7 @@ export function HomePage() {
               image: live.image ?? kit.image,
               tag: live.featured ? kit.tag ?? "Destaque" : undefined,
             }
-          : kit;
+          : { ...kit, slug: experienceSlugs[kit.id] ?? kit.id };
       }),
     [liveProductMap],
   );
@@ -157,9 +164,6 @@ export function HomePage() {
     heroImage: "/images/hero-oysters.png",
   });
   const [menuOpen, setMenuOpen] = useState(false);
-  const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    Object.fromEntries(kits.map((kit) => [kit.id, 1])),
-  );
   const [activeSlide, setActiveSlide] = useState(0);
   const [slidesPerView, setSlidesPerView] = useState(1);
   const [carouselPaused, setCarouselPaused] = useState(false);
@@ -339,13 +343,6 @@ export function HomePage() {
   }, []);
 
   useEffect(() => {
-    setQuantities((current) => ({
-      ...Object.fromEntries(kits.map((kit) => [kit.id, 1])),
-      ...current,
-    }));
-  }, [kits]);
-
-  useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
     const updateSlidesPerView = () => setSlidesPerView(mediaQuery.matches ? 3 : 2);
 
@@ -373,19 +370,6 @@ export function HomePage() {
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
-  }
-
-  function chooseKit(id: string) {
-    const q = quantities[id] ?? 1;
-    const currentQty = cartQuantities[id] ?? 0;
-    const nextQuantity = currentQty + q;
-    setCartQuantities((current) => ({ ...current, [id]: nextQuantity }));
-    setCartOpen(true);
-  }
-
-  function setKitQuantity(id: string, quantity: number) {
-    const nextQuantity = Math.min(20, Math.max(1, Math.round(quantity) || 1));
-    setQuantities((current) => ({ ...current, [id]: nextQuantity }));
   }
 
   function moveCarousel(direction: -1 | 1) {
@@ -729,9 +713,6 @@ export function HomePage() {
               }
             >
               {kits.map((kit, index) => {
-                const quantity = quantities[kit.id] ?? 1;
-                const total = kit.price * quantity;
-
                 return (
                   <motion.article
                     key={kit.id}
@@ -781,54 +762,9 @@ export function HomePage() {
                         ))}
                       </ul>
 
-                      <div className="mt-auto flex flex-col gap-4 pt-5">
-                        <div className="flex flex-col gap-3 border-b border-white/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
-                          <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/55">
-                            Quantidade de porções
-                          </span>
-                          <div className="quantity-stepper">
-                            <button
-                              type="button"
-                              onClick={() => setKitQuantity(kit.id, quantity - 1)}
-                              aria-label={`Diminuir quantidade de ${kit.name}`}
-                            >
-                              <Minus size={16} />
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              max="20"
-                              value={quantity}
-                              onChange={(event) => setKitQuantity(kit.id, Number(event.target.value))}
-                              aria-label={`Quantidade de porções de ${kit.name}`}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setKitQuantity(kit.id, quantity + 1)}
-                              aria-label={`Aumentar quantidade de ${kit.name}`}
-                            >
-                              <Plus size={16} />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-                          <div>
-                            <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
-                              {quantity} {quantity === 1 ? "porção" : "porções"}
-                            </p>
-                            <p className="mt-1 font-display text-[2rem] font-semibold leading-none text-champagne sm:text-4xl">
-                              {money.format(total)}
-                            </p>
-                            <p className="mt-1 text-xs text-white/35">
-                              {money.format(kit.price)} por porção
-                            </p>
-                          </div>
-                          <button onClick={() => chooseKit(kit.id)} className="mini-gold-button w-full justify-center sm:w-auto">
-                            Selecionar <ArrowRight size={15} />
-                          </button>
-                        </div>
-                      </div>
+                      <Link href={`/produtos/${kit.slug}`} className="mini-gold-button mt-auto w-full justify-center">
+                        Ver detalhes <ArrowRight size={15} />
+                      </Link>
                     </div>
                   </motion.article>
                 );

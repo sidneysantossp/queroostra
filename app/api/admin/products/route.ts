@@ -22,6 +22,8 @@ const productSchema = z.object({
   preparationHours: z.number().int().min(0),
   approximateVolume: z.string().optional(),
   displayOrder: z.number().int(),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
 });
 
 const listSchema = z.object({ products: z.array(productSchema) });
@@ -65,6 +67,8 @@ function mapProduct(row: Record<string, unknown>): ProductRecord {
       ? String(row.approximate_volume)
       : undefined,
     displayOrder: Number(row.display_order),
+    seoTitle: row.seo_title ? String(row.seo_title) : undefined,
+    seoDescription: row.seo_description ? String(row.seo_description) : undefined,
   };
 }
 
@@ -114,6 +118,8 @@ export async function PUT(request: Request) {
     preparation_hours: product.preparationHours,
     approximate_volume: product.approximateVolume ?? null,
     display_order: product.displayOrder,
+    seo_title: product.seoTitle || null,
+    seo_description: product.seoDescription || null,
   }));
   const { error } = await context.supabase
     .from("products")

@@ -47,6 +47,13 @@ const categoryIcons: Record<string, LucideIcon> = {
   vinhos: Wine,
 };
 
+const experienceSlugs: Record<string, string> = {
+  gratinada: "brasa-gourmet",
+  baby: "experiencia-degustacao",
+  tradicional: "experiencia-happy-hour",
+  premium: "reserva-premium",
+};
+
 function MenuCarousel({
   children,
   label,
@@ -207,13 +214,14 @@ export function MenuPage() {
       return live
         ? {
             ...product,
+            slug: live.slug,
             name: live.name,
             size: live.shortDescription,
             details: live.includedItems,
             price: live.promotionalPrice ?? live.price,
             image: live.image ?? product.image,
           }
-        : product;
+        : { ...product, slug: experienceSlugs[product.id] ?? product.id };
     });
     const knownIds = new Set(known.map((product) => product.id));
     return [
@@ -222,6 +230,7 @@ export function MenuPage() {
         .filter((product) => product.type !== "beverage" && !knownIds.has(product.externalKey ?? product.id))
         .map((product) => ({
           id: product.externalKey ?? product.id,
+          slug: product.slug,
           name: product.name,
           size: product.shortDescription,
           details: product.includedItems,
@@ -239,13 +248,14 @@ export function MenuPage() {
           const live = liveMap.get(product.id);
           return live
             ? {
-                ...product,
+              ...product,
+              slug: live.slug,
                 name: live.name,
                 description: live.shortDescription,
                 price: live.promotionalPrice ?? live.price,
                 image: live.image,
               }
-            : product;
+            : { ...product, slug: product.id };
         }),
       })),
     [liveMap],
@@ -605,9 +615,6 @@ export function MenuPage() {
 
           <MenuCarousel label="Experiências com ostras">
             {displayExperiences.map((product) => {
-              const quantity = quantities[product.id] ?? 0;
-              const subtotal = product.price * quantity;
-
               return (
                 <article
                   key={product.id}
@@ -644,27 +651,9 @@ export function MenuPage() {
                       ))}
                     </ul>
 
-                    <div className="mt-auto flex flex-col gap-4 pt-5 lg:pt-7 xl:flex-row xl:items-end xl:justify-between">
-                      <div>
-                        <p className="text-[0.63rem] uppercase tracking-[0.16em] text-white/40">
-                          {quantity > 0 ? `${quantity} ${quantity === 1 ? "porção" : "porções"}` : "Por porção"}
-                        </p>
-                        <p className="mt-1 font-display text-2xl font-semibold text-champagne lg:text-4xl">
-                          {money.format(quantity > 0 ? subtotal : product.price)}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-start gap-2 xl:items-end">
-                        <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/40">
-                          Quantidade
-                        </span>
-                        <QuantityControl
-                          id={product.id}
-                          name={product.name}
-                          quantity={quantity}
-                          onChange={setQuantity}
-                        />
-                      </div>
-                    </div>
+                    <Link href={`/produtos/${product.slug}`} className="mini-gold-button mt-auto w-full justify-center">
+                      Ver detalhes <ArrowRight size={15} />
+                    </Link>
                   </div>
                 </article>
               );
@@ -706,9 +695,6 @@ export function MenuPage() {
 
                   <MenuCarousel label={category.name} trackClassName="menu-carousel-track-compact" desktopSlidesPerView={5}>
                     {category.products.map((product) => {
-                      const quantity = quantities[product.id] ?? 0;
-                      const subtotal = product.price * quantity;
-
                       return (
                         <article
                           key={product.id}
@@ -737,22 +723,9 @@ export function MenuPage() {
                               <CategoryIcon className="shrink-0 text-gold" size={21} strokeWidth={1.4} />
                             </div>
 
-                            <div className="mt-auto flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-4 xl:flex-row xl:items-end xl:gap-4">
-                              <div>
-                                <p className="text-[0.6rem] uppercase tracking-[0.14em] text-white/35">
-                                  {quantity > 0 ? "Subtotal" : "Unidade"}
-                                </p>
-                                <p className="mt-1 font-display text-2xl text-champagne lg:text-[1.75rem]">
-                                  {money.format(quantity > 0 ? subtotal : product.price)}
-                                </p>
-                              </div>
-                              <QuantityControl
-                                id={product.id}
-                                name={product.name}
-                                quantity={quantity}
-                                onChange={setQuantity}
-                              />
-                            </div>
+                            <Link href={`/produtos/${product.slug}`} className="mt-auto inline-flex items-center gap-2 border-t border-white/10 pt-4 text-[0.66rem] font-semibold uppercase tracking-[0.13em] text-champagne transition hover:text-gold">
+                              Ver detalhes <ArrowRight size={14} />
+                            </Link>
                           </div>
                         </article>
                       );

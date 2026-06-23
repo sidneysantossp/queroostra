@@ -48,6 +48,8 @@ export async function GET() {
       preparationHours: row.preparation_hours,
       approximateVolume: row.approximate_volume ?? undefined,
       displayOrder: row.display_order,
+      seoTitle: row.seo_title ?? undefined,
+      seoDescription: row.seo_description ?? undefined,
     };
   });
   return NextResponse.json(

@@ -119,6 +119,8 @@ export type ProductRecord = {
   preparationHours: number;
   approximateVolume?: string;
   displayOrder: number;
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 export type AddonRecord = {
