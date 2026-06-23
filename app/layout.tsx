@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { GlobalMobileNav } from "@/components/global-mobile-nav";
 import { CookieConsent } from "@/components/cookie-consent";
+import { FacebookPixel } from "@/components/facebook-pixel";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -140,6 +141,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <FacebookPixel />
         {children}
         <GlobalMobileNav />
         <CookieConsent />
